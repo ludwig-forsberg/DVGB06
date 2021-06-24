@@ -1,0 +1,102 @@
+*{
+    font-family: Orbitron;
+    margin: 0;
+    padding: 0;
+}
+
+body{
+    margin: 0;
+    background: black;
+}
+
+input{
+    width: 98%;
+    font-size: 4vh;
+    text-align: center;
+    margin: .5vh auto;
+    display: block;
+    border-width: 0;
+}
+
+button{
+    font-size: 4vh;
+    width: 98%;
+    margin: .5vh auto;
+    display: block;
+    padding:0.7em 1.4em;
+    border-radius:0.15em;
+    box-sizing: border-box;
+    text-decoration:none;
+    font-family:'Roboto',sans-serif;
+    text-transform:uppercase;
+    font-weight:400;
+    color:#FFFFFF;
+    background-color:#3369ff;
+    box-shadow:inset 0 -0.6em 0 -0.35em rgba(0,0,0,0.17);
+    text-align:center;
+    position:relative;
+}
+button:hover{
+    background-color:#2956d3;
+}
+button:active{
+top:0.1em;
+}
+
+
+.score-container input{
+    color: white;
+}
+
+.score-container.red{
+    background: linear-gradient(0deg, #4e0000 0%, #a70000 50%, #c40000 51%, #8f0000 100%);
+}
+
+.score-container.red input{
+    background-color:#680C07;
+}
+
+.score-container.red input:hover{
+    background-color:#4d0905;
+}
+
+.score-container.blue{
+    background: linear-gradient(0deg, #00004e 0%, #0000a7 50%, #0000c4 51%, #00008f 100%);
+}
+
+.score-container.blue input{
+    background-color:#04086B;
+}
+.score-container.blue input:hover{
+    background-color:#030644;
+}
+
+
+.row {
+    display: flex;
+}
+
+.column {
+    flex: 50%;
+}
+
+
+
+.points{
+    font-size: 20vh;
+    color: white;
+    margin: 0;
+    flex: 75%;
+    text-align: center;
+}
+
+
+
+.set{
+    font-size: 10vh;
+    color: white;
+    margin: 0;
+    flex: 25%;
+    text-align: center;
+}
+
