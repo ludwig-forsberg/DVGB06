@@ -72,6 +72,7 @@ function setUI(){
 function reset(){
     p1_points = p1_set = p2_points = p2_set = 0;
     setUI();
+    sendData();
 }
 
 function p1_add_point(){
@@ -81,6 +82,7 @@ function p1_add_point(){
         p1_set++;
     }
     setUI();
+    sendData();
 }
 
 
@@ -91,6 +93,7 @@ function p2_add_point(){
         p2_set++;
     }
     setUI();
+    sendData();
 }
 
 function p1_sub_point(){
@@ -102,6 +105,7 @@ function p1_sub_point(){
         p2_set++;
     }
     setUI();
+    sendData();
 }
 
 
@@ -114,11 +118,13 @@ function p2_sub_point(){
         p1_set++;
     }
     setUI();
+    sendData();
 }
 
 function swap_serve(){
     original_serve = !original_serve;
     setServeUI();
+    sendData();
 }
 
 function swap_sides(){
@@ -141,6 +147,7 @@ function swap_sides(){
     p2_set = temp;
     
     setUI();
+    sendData();
 }
 
 function drawServeIndicator(canvas){
@@ -171,6 +178,25 @@ function drawServeIndicator(canvas){
 
     
 }
+function sendData(){
+    connection.send(JSON.stringify({
+        "player1":{
+            "name": (input_p1_name.value==""?input_p1_name.placeholder:input_p1_name.value),
+            "points": p1_points,
+            "set": p1_set
+        },
+        "player2":{
+            "name": (input_p2_name.value==""?input_p2_name.placeholder:input_p2_name.value),
+            "points": p2_points,
+            "set": p2_set
+        },
+        "original_side": original_side,
+        "original_serve": original_serve,
+        "screen_height": window.screen.height,
+        "screen_width": window.screen.width
+    }));
+
+}
 
 
 window.onload = ()=>{
@@ -186,4 +212,38 @@ window.onload = ()=>{
     canvas_p2_serve = document.getElementById("canvas_p2_serve");
     drawServeIndicator(canvas_p1_serve);
     drawServeIndicator(canvas_p2_serve);
+
+    var wsproto = (location.protocol === 'https:') ? 'wss:' : 'ws:';
+    connection = new WebSocket(wsproto + '//' + window.location.host + '/websocket');
+
+    connection.onmessage = function(e){
+        if(e.data != ""){
+            let data = JSON.parse(e.data);
+
+            input_p1_name.value = data.player1.name;
+            p1_points = data.player1.points;
+            p1_set = data.player1.set;
+
+            input_p2_name.value = data.player2.name;
+            p2_points = data.player2.points;
+            p2_set = data.player2.set;
+
+            original_side = data.original_side;
+            original_serve = data.original_serve;
+
+            setUI();
+        }
+    }
+    connection.onerror = function(error){
+        console.error(error);
+        connection.close();
+    }
+
+    input_p1_name.addEventListener('input', (event) => {
+        sendData();
+    });
+
+    input_p2_name.addEventListener('input', (event) => {
+        sendData();
+    });
 }

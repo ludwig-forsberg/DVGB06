@@ -42,6 +42,60 @@ public:
    }
 };
 
+
+class GameHandler : public CivetWebSocketHandler {
+
+   char gameData[1000] = "";
+   std::vector<struct mg_connection*> all_connections;
+
+   virtual bool handleConnection(CivetServer* server,
+	  const struct mg_connection* conn) {
+	  printf("WS connected\n");
+	  return true;
+   }
+
+   virtual void handleReadyState(CivetServer* server,
+	  struct mg_connection* conn) {
+	  printf("WS ready\n");
+	  all_connections.push_back(conn);
+
+	  mg_websocket_write(conn, MG_WEBSOCKET_OPCODE_TEXT, gameData, strlen(gameData));
+   }
+
+   virtual bool handleData(CivetServer* server,
+	  struct mg_connection* conn,
+	  int bits,
+	  char* data,
+	  size_t data_len) {
+
+	  if (data_len <= 2) {
+		 return false;
+	  }
+	  printf("WS got %lu bytes: ", (long unsigned)data_len);
+
+	  for (int i = 0; i < data_len; i++) {
+		 gameData[i] = data[i];
+	  }
+	  gameData[data_len] = '\0';
+
+	  printf(gameData);
+
+	  for (auto& value : all_connections) {
+		 if (value != conn) {
+			mg_websocket_write(value, MG_WEBSOCKET_OPCODE_TEXT, gameData, strlen(gameData));
+		 }
+	  }
+
+
+	  return true;
+   }
+
+   virtual void handleClose(CivetServer* server,
+	  const struct mg_connection* conn) {
+	  printf("WS closed\n");
+   }
+};
+
 int
 main(int argc, char* argv[])
 {
@@ -57,6 +111,8 @@ main(int argc, char* argv[])
 
    CivetServer server(cpp_options);
 
+   GameHandler h_websocket;
+   server.addWebSocketHandler("/websocket", h_websocket);
    printf("Run example at http://localhost:%s%s\n", PORT, EXAMPLE_URI);
    printf("Exit at http://localhost:%s%s\n", PORT, EXIT_URI);
 
