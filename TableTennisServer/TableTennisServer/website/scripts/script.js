@@ -17,10 +17,41 @@ var score_container_p2;
 var input_p2_name;
 var canvas_p2_serve;
 
+var speaker_toggle;
+var use_recorded_audio_toggle;
+var popup;
+var popup_container;
+var popup_header;
+var popup_text;
+
+
+var span_console;
+
 var connection;
+var p1_serve = true;
+
+var recordedAudio={};
+var requiredAudio=[
+  "player1",
+  "player2",
+  "serves",
+  "setpoint",
+  "0",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "11"
+];
 
 function setServeUI(){
-    let p1_serve = true;
+    p1_serve = true;
 
     if((original_serve && !original_side) || (!original_serve && original_side))
         p1_serve = !p1_serve;
@@ -49,6 +80,7 @@ function setServeUI(){
     }
 }
 
+
 function setUI(){
     text_p1_points.innerHTML = "" + p1_points;
     text_p1_set.innerHTML = "" + p1_set;
@@ -66,6 +98,77 @@ function setUI(){
         score_container_p1.classList.add("blue");
         score_container_p2.classList.remove("blue")
         score_container_p2.classList.add("red");
+    }
+
+    if(speaker_toggle.checked){
+        if(use_recorded_audio_toggle.checked){
+            var audioList = [];
+
+            function addAudioToList(str){
+                let audio = recordedAudio[str];
+                if(audio == undefined){
+                    console.log("Audio not found: ", str);
+                }else{
+                    audioList.push(audio);
+                }
+            }
+
+            if((p1_serve && original_side) || (!p1_serve && !original_side)){
+                if(original_side){
+                    addAudioToList("" + p1_points);
+                    addAudioToList("" + p2_points);
+                }else{
+                    addAudioToList("" + p2_points);
+                    addAudioToList("" + p1_points);
+                }
+                addAudioToList("player1");
+            }else{
+                if(original_side){
+                    addAudioToList("" + p2_points);
+                    addAudioToList("" + p1_points);
+                }else{
+                    addAudioToList("" + p1_points);
+                    addAudioToList("" + p2_points);
+                }
+                addAudioToList("player2");
+            }
+            addAudioToList("serves");
+            if((p1_points >= 10 || p2_points >= 10) && p1_points != p2_points)
+                addAudioToList("setpoint");
+
+            function playAudio(){
+                let audio = audioList.shift();
+                audio.play();
+                if(audioList.length > 0)
+                {
+                    audio.onended = ()=>{
+                        playAudio();
+                    }
+                }
+            }
+            playAudio();
+        }else{
+            var audio_message_string = "";
+
+            let name = "";
+    
+            if(p1_serve){
+                name = (input_p1_name.value==""?input_p1_name.placeholder:input_p1_name.value);
+                audio_message_string += p1_points + " " + p2_points;
+            }else{
+                name = (input_p2_name.value==""?input_p2_name.placeholder:input_p2_name.value);
+                audio_message_string += p2_points + " " + p1_points;
+    
+            }
+    
+            audio_message_string += name + " serves";
+    
+            if((p1_points >= 10 || p2_points >= 10) && p1_points != p2_points)
+                audio_message_string += "setpoint";
+    
+            var audio_message = new SpeechSynthesisUtterance(audio_message_string);
+            window.speechSynthesis.speak(audio_message);
+        }
     }
 }
 
@@ -134,9 +237,12 @@ function swap_sides(){
     input_p1_name.value = input_p2_name.value;
     input_p2_name.value = temp;
 
+
     temp = input_p1_name.placeholder;
     input_p1_name.placeholder = input_p2_name.placeholder;
     input_p2_name.placeholder = temp;
+
+
 
     temp = p1_points;
     p1_points = p2_points;
@@ -145,6 +251,8 @@ function swap_sides(){
     temp = p1_set;
     p1_set = p2_set;
     p2_set = temp;
+
+
     
     setUI();
     sendData();
@@ -178,6 +286,8 @@ function drawServeIndicator(canvas){
 
     
 }
+var original_side = true;
+var original_serve = true;
 function sendData(){
     connection.send(JSON.stringify({
         "player1":{
@@ -198,8 +308,7 @@ function sendData(){
 
 }
 
-
-window.onload = ()=>{
+window.addEventListener('load', (event) => {
     text_p1_points = document.getElementById("text_p1_points");
     text_p1_set = document.getElementById("text_p1_set");
     score_container_p1 = document.getElementById("score_container_p1");
@@ -210,11 +319,21 @@ window.onload = ()=>{
     score_container_p2 = document.getElementById("score_container_p2");
     input_p2_name = document.getElementById("input_p2_name");
     canvas_p2_serve = document.getElementById("canvas_p2_serve");
+    span_console = document.getElementById("span_console");
     drawServeIndicator(canvas_p1_serve);
     drawServeIndicator(canvas_p2_serve);
+    
+    speaker_toggle = document.getElementById("speaker_toggle");
+    use_recorded_audio_toggle = document.getElementById("use_recorded_audio_toggle");
+    popup = document.getElementById("popup");
+    popup_container = document.getElementById("popup_container");
+    popup_header = document.getElementById("popup_header");
+    popup_text = document.getElementById("popup_text");
+
 
     var wsproto = (location.protocol === 'https:') ? 'wss:' : 'ws:';
     connection = new WebSocket(wsproto + '//' + window.location.host + '/websocket');
+    //connection.send(i);
 
     connection.onmessage = function(e){
         if(e.data != ""){
@@ -246,4 +365,4 @@ window.onload = ()=>{
     input_p2_name.addEventListener('input', (event) => {
         sendData();
     });
-}
+});
