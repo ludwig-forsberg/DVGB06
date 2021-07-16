@@ -1,0 +1,150 @@
+.noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-user-select: none; /* Safari */
+       -khtml-user-select: none; /* Konqueror HTML */
+         -moz-user-select: none; /* Old versions of Firefox */
+          -ms-user-select: none; /* Internet Explorer/Edge */
+              user-select: none; /* Non-prefixed version, currently
+                                    supported by Chrome, Edge, Opera and Firefox */
+}
+
+
+/*Input Component*/
+.input-component{
+    display: block;
+    background: #002550;
+}
+
+.input-component div{
+    display: flex;
+    
+    min-height: 4vh;
+    width: 100%;
+}
+
+.input-component span{
+    color: white;
+    padding: 1vh;
+    position: fixed;
+}
+
+.input-component span:not(.fas){
+    display: none;
+}
+
+.input-component input{
+    background: #375076;
+    color: white;
+    border-width: 0;
+    text-align: center;
+    padding: 0 4vh;
+    flex: 1;
+}
+
+.input-component input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: #BBB;
+    opacity: 1; /* Firefox */
+}
+  
+.input-component input:-ms-input-placeholder { /* Internet Explorer 10-11 */
+    color: #BBB;
+}
+  
+.input-component input::-ms-input-placeholder { /* Microsoft Edge */
+    color: #BBB;
+}
+
+/*Button Component*/
+.button-component{
+    display: block;
+    background: #007643;
+}
+
+.button-component:hover{
+    display: block;
+    background: #00502E;
+}
+
+.button-component:active{
+    background: #004326;
+}
+
+
+.button-component div{
+    display: flex;
+    min-height: 4vh;
+    width: 100%;
+}
+
+.button-component span{
+    color: white;
+    padding: 1vh;
+    position: fixed;
+}
+
+.button-component span:not(.fas){
+    display: none;
+}
+
+.button-component p{
+    margin: auto;
+    color: white;
+    pointer-events: none;
+}
+
+.button-component.disabled{
+    background: #4e4e4e;
+}
+
+.button-component.disabled p,
+.button-component.disabled span{
+    opacity: 0.7;
+}
+
+/*Drop Down Component*/
+.drop-down-component{
+    display: block;
+}
+
+.drop-down-component button{
+    font-size: 2vh;
+    width: 100%;
+}
+
+.drop-down-component .values{
+    display: none;
+    position: fixed;
+    background: #EEE;
+    
+    border-radius: 1vh;
+}
+
+.drop-down-component .values.open{
+    display: grid;
+}
+
+.drop-down-component .values value{
+    padding: .5vh;
+    font-size: 2vh;
+}
+
+.drop-down-component .values value.selected{
+    border: .1vh solid black;
+}
+
+.drop-down-component .values value:first-child{
+    border-radius: 1vh 1vh 0 0;
+}
+
+.drop-down-component .values value:last-child{
+    border-radius: 0 0 1vh 1vh;
+}
+
+.drop-down-component .values value:hover{
+    display: block;
+    background: rgb(201, 201, 201);
+}
+
+.drop-down-component .values value:active{
+    background: rgb(122, 122, 122);
+}

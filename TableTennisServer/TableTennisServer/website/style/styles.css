@@ -1,215 +1,50 @@
+/* latin */
+@font-face {
+    font-family: 'Orbitron';
+    font-style: normal;
+    font-weight: 400;
+    src: url(../webfonts/yMJMMIlzdpvBhQQL_SC3X9yhF25-T1nyGy6BoWgz.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 *{
     font-family: Orbitron;
-    margin: 0;
-    padding: 0;
 }
 
-body{
-    margin: 0;
-    background: black;
-}
-
-
-
-.row {
-    display: flex;
-}
-
-.column {
-    flex: 50%;
-}
-
-
-/* The switch - the box around the slider */
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 34px;
-  }
-  
-  /* Hide default HTML checkbox */
-  .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  
-  /* The slider */
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    -webkit-transition: .4s;
-    transition: .4s;
-  }
-  
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    -webkit-transition: .4s;
-    transition: .4s;
-  }
-  
-  input:checked + .slider {
-    background-color: #2196F3;
-  }
-  
-  input:focus + .slider {
-    box-shadow: 0 0 1px #2196F3;
-  }
-  
-  input:checked + .slider:before {
-    -webkit-transform: translateX(26px);
-    -ms-transform: translateX(26px);
-    transform: translateX(26px);
-  }
-  
-  /* Rounded sliders */
-  .slider.round {
-    border-radius: 34px;
-  }
-  
-  .slider.round:before {
-    border-radius: 50%;
-  }
-
-
-
-button{
-    font-size: 4vh;
-    width: 98%;
-    margin: .5vh auto;
-    display: block;
-    padding:0.7em 1.4em;
-    border-radius:0.15em;
-    box-sizing: border-box;
-    text-decoration:none;
-    font-family:'Roboto',sans-serif;
-    text-transform:uppercase;
-    font-weight:400;
-    color:#FFFFFF;
-    background-color:#3369ff;
-    box-shadow:inset 0 -0.6em 0 -0.35em rgba(0,0,0,0.17);
-    text-align:center;
-    position:relative;
-}
-button:hover{
-    background-color:#2956d3;
-}
-button:active{
-    top:0.1em;
-}
-
-    
-input{
-    width: 98%;
-    font-size: 4vh;
-    text-align: center;
-    margin: .5vh auto;
-    display: block;
-    border-width: 0;
-}
-
-.msgs span{
-    color: white;
-    margin: auto;
-    display: block;
-    width: fit-content;
-}
-
-
-
-
-
-.score-container input{
-    color: white;
-}
-
-.score-container.red{
-    background: linear-gradient(0deg, #4e0000 0%, #a70000 50%, #c40000 51%, #8f0000 100%);
-}
-
-.score-container.red input{
-    background-color:#680C07;
-}
-
-.score-container.red input:hover{
-    background-color:#4d0905;
-}
-
-.score-container.blue{
-    background: linear-gradient(0deg, #00004e 0%, #0000a7 50%, #0000c4 51%, #00008f 100%);
-}
-
-.score-container.blue input{
-    background-color:#04086B;
-}
-.score-container.blue input:hover{
-    background-color:#030644;
-}
-
-
-.points{
-    font-size: 20vh;
-    color: white;
-    margin: 0;
-    flex: 75%;
-    text-align: center;
-}
-
-
-
-.set{
-    font-size: 10vh;
-    color: white;
-    margin: 0;
-    flex: 25%;
-    text-align: center;
-}
-
-p{
-    color: white;
-}
-
-
-#popup{
-    top: 0;
-    left: 0;
-    position: fixed;
+table{
     width: 100%;
-    height: 100%;
-    background: #000000AA;
+}
+
+td{
+    text-align: center;
+}
+
+
+/*Popup*/
+.popup.container{
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    background: #0000007F;
     justify-content: center;
     align-items: center;
     display: none;
 }
-
-#popup_container{
-    background: white;
+.popup.content{
+    background: #FFFFFF;
+    border-radius: 2vh;
+    padding: 2vh;
     width: fit-content;
-    padding: 5vh;
-    border-radius: 1vh;
 }
 
-#popup h1{
-    color: black;
-    width: fit-content;
-    margin: 0 0 5vh 0;
+.popup.content >:not(:first-child){
+    margin: 1vh 0 0 0;
 }
 
-#popup h2{
-    color: black;
-    width: fit-content;
-    margin: auto;
-}
+
+
+
+
 
