@@ -5,11 +5,12 @@ class ComponentTemplate extends HTMLElement{
     constructor(){
         super();
         this.loaded = false;
-        this.classList.add("template-component");
     }
 
     connectedCallback(){
-        this.attribute = GetAttribute("attribute", "Default Value");
+        this.classList.add("template-component");
+
+        this.attribute = GetAttribute(this, "attribute", "Default Value");
         this.innerHTML = ``;
         this.loaded = true;
     }
@@ -53,8 +54,6 @@ class InputComponent extends HTMLElement{
     }
 
     connectedCallback(){
-        this.classList.add("input-component");
-
         this.type = GetAttribute(this, "type", "text");
         this.placeholder = GetAttribute(this, "placeholder", "");
         this.icon = GetAttribute(this, "icon", "");
@@ -128,8 +127,6 @@ class ButtonComponent extends HTMLElement{
     }
 
     connectedCallback(){
-        this.classList.add("button-component");
-
         this.text = GetAttribute(this, "text", "");
         this.icon = GetAttribute(this, "icon", "");
 
@@ -145,9 +142,9 @@ class ButtonComponent extends HTMLElement{
         `;
 
         
-
-        this.span = this.children[0].children[0];
-        this.p = this.children[0].children[1];
+        this.div = this.children[0];
+        this.span = this.div.children[0];
+        this.p = this.div.children[1];
 
         if(this.icon != ""){
             this.span.classList.add(`fas`);
@@ -270,12 +267,11 @@ class DropDownComponent extends HTMLElement{
     }
 
     connectedCallback(){
-        this.classList.add("drop-down-component");
-
         this.placeholder = GetAttribute(this, "placeholder", "Select a choice..");
         this.selectedIndex = parseInt(GetAttribute(this, "selected-index", "-1"));
+        this.icon = GetAttribute(this, "icon", "");
         this.innerHTML = `
-        <button class="noselect"></button>
+        <button-component class="noselect"></button-component>
         <div class="values">
             ${this.innerHTML}
         </div>
@@ -297,22 +293,25 @@ class DropDownComponent extends HTMLElement{
             };
         }
 
-        this.button.addEventListener("click", ()=>{
-            if(this.div.classList.contains("open")){
-                this.div.classList.remove("open");
+        this.button.setAttribute("icon", this.icon);
+
+        if(this.selectedIndex == -1)
+            this.button.setAttribute("text", this.placeholder);
+        else
+            this.button.setAttribute("text", this.values[this.selectedIndex].innerHTML);
+
+        let _this = this;
+
+        this.button.addEventListener("click", function (event) {
+            if(_this.div.classList.contains("open")){
+                _this.div.classList.remove("open");
             }else{
-                this.div.classList.add("open");
+                _this.div.classList.add("open");
             }
         });
 
-        if(this.selectedIndex == -1)
-            this.button.innerHTML = this.placeholder;
-        else
-            this.button.innerHTML = this.values[this.selectedIndex].innerHTML;
-
-        let _this = this;
         window.addEventListener("click", function (event) {
-            if (event.target != _this.button) {
+            if (event.target != _this.button && event.target != _this.button.div) {
                 _this.div.classList.remove("open");
             }
         });
@@ -321,7 +320,7 @@ class DropDownComponent extends HTMLElement{
     }
 
     static get observedAttributes(){
-        return ["selected-index", "placeholder"];
+        return ["selected-index", "placeholder", "icon"];
     }
     attributeChangedCallback(attrName, oldVal, newVal) {  
 		if (this.loaded && oldVal !== newVal) {
@@ -331,13 +330,13 @@ class DropDownComponent extends HTMLElement{
                         this.values[i].classList.remove("selected");
                     }
                     if(this.selectedIndex == -1)
-                        this.button.innerHTML = this.placeholder;
+                        this.button.setAttribute("text", this.placeholder);
                     else{
                         this.values[this.selectedIndex].classList.add("selected");
-                        this.button.innerHTML = this.values[this.selectedIndex].innerHTML;
-                        if(this.onSelectChange != undefined){
-                            this.onSelectChange(this.selectedIndex);
-                        }
+                        this.button.setAttribute("text", this.values[this.selectedIndex].innerHTML);
+                    }
+                    if(this.onSelectChange != undefined){
+                        this.onSelectChange(this.selectedIndex);
                     }
                     break;
                 case "placeholder":
@@ -345,14 +344,48 @@ class DropDownComponent extends HTMLElement{
                     if(this.selectedIndex == -1)
                         this.button.innerHTML = this.placeholder;
                     break;
+                case "icon":
+                    this.icon = newVal;
+                    this.button.setAttribute("icon", newVal);
+                    break;
             }
 		}
 	}
 
 }
 
+// class TableComponent extends HTMLTableElement{
+    
+
+//     constructor(){
+//         super();
+//         this.loaded = false;
+//     }
+
+//     connectedCallback(){
+//         this.title = GetAttribute(this, "title", "");
+//         console.log("" + this.innerHTML)
+//         /*this.innerHTML = `
+//             <h1>${this.title}</h1>
+//             <table>${this.innerHTML}</table>
+//         `;*/
+//         this.loaded = true;
+//     }
+
+//     static get observedAttributes(){
+//         return [];
+//     }
+//     attributeChangedCallback(attrName, oldVal, newVal) {  
+// 		if (this.loaded && oldVal !== newVal) {
+			
+// 		}
+// 	}
+
+// }
+
 window.addEventListener('load', (event) => {
     customElements.define('input-component', InputComponent);
     customElements.define('button-component', ButtonComponent);
     customElements.define('drop-down-component', DropDownComponent);
+    // customElements.define('table-component', TableComponent, {extends: "table"});
 });

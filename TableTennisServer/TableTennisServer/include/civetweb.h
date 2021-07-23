@@ -23,7 +23,8 @@
 #ifndef CIVETWEB_HEADER_INCLUDED
 #define CIVETWEB_HEADER_INCLUDED
 
-#define NO_SSL
+/*#define NO_SSL*/
+#define OPENSSL_API_3_0
 #define USE_WEBSOCKET
 
 #define CIVETWEB_VERSION "1.15"

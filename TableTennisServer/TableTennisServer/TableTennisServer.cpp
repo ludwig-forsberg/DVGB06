@@ -20,15 +20,22 @@
 
 #define DOCUMENT_ROOT "./website"
 #define PORT "80,443s"
-#define SSL_CERTIFICATE_PATH "C:/Users/ludde/Documents/EscapeReality/TableTennisApp/server.pem"
+#define SSL_CERTIFICATE_PATH "./server.pem"
 #define EXAMPLE_URI "/example"
 #define EXIT_URI "/exit"
 
 
-
+#define FORMAT_JSON_OUTPUT true
 
 /* Exit flag for main loop */
 volatile bool exitNow = false;
+
+unsigned int clientCounter = 0;
+unsigned int teamCounter = 0;
+unsigned int tourCounter = 0;
+std::map<unsigned int, User*> all_users;
+std::map<unsigned int, Team*> all_teams;
+std::map<unsigned int, Tour*> all_tours;
 
 
 class ExitHandler : public CivetHandler
@@ -47,13 +54,8 @@ public:
 };
 
 class WebsocketHandler : public CivetWebSocketHandler {
-   unsigned int clientCounter = 0;
-   unsigned int teamCounter = 0;
-   unsigned int tourCounter = 0;
+   
    char gameData[1000] = "";
-   std::map<unsigned int, User*> all_users;
-   std::map<unsigned int, Team*> all_teams;
-   std::map<unsigned int, Tour*> all_tours;
 
    void broadcast(string& message) {
 	  for (std::map<unsigned int, User*>::iterator iter = all_users.begin(); iter != all_users.end(); ++iter)
@@ -61,163 +63,6 @@ class WebsocketHandler : public CivetWebSocketHandler {
 		 mg_websocket_write(iter->second->conn, MG_WEBSOCKET_OPCODE_TEXT, message.c_str(), message.length());
 	  }
    }
-
-   void generateJson1(string& json, User& user) {
-	  json += "{\"action\":1,\"data\":{\"id\":";
-	  json += to_string(user.id);
-	  json += ",\"name\":\"";
-	  json += user.name;
-	  json += "\"}}";
-   }
-
-   void generateJson2(string& json, User& user) {
-	  json += "{\"action\":2,\"data\":{\"users\":[{\"id\":";
-	  json += to_string(user.id);
-	  json += ",\"name\":\"";
-	  json += user.name;
-	  json += "\",\"team\":\"";
-	  if (user.team == nullptr) {
-		 json += "none";
-	  }
-	  else {
-		 json += user.team->name;
-	  }
-	  json += "\"}]}}";
-   }
-
-   void generateJson2(string& json) {
-	  json += "{\"action\":2,\"data\":{\"users\":[";
-
-	  bool empty = true;
-	  for (std::map<unsigned int, User*>::iterator iter = all_users.begin(); iter != all_users.end(); ++iter)
-	  {
-		 if (!empty) {
-			json += ",";
-		 }
-		 json += "{\"id\":";
-		 json += to_string(iter->first);
-		 json += ",\"name\":\"";
-		 json += iter->second->name;
-		 json += "\",\"team\":\"";
-		 if (iter->second->team == nullptr) {
-			json += "none";
-		 }
-		 else {
-			json += iter->second->team->name;
-		 }
-		 json += "\"}";
-		 empty = false;
-	  }
-	  json += "]}}";
-   }
-
-   void generateJson3(string& json, Team& team) {
-	  json += "{\"action\":3,\"data\":{\"teams\":[";
-	  json += "{\"id\":";
-	  json += to_string(team.id);
-	  json += ",\"name\":\"";
-	  json += team.name;
-	  json += "\",\"owner\":{\"id\":";
-	  json += to_string(team.owner->id);
-	  json += ",\"name\":\"";
-	  json += team.owner->name;
-	  json += "\"}}]}}";
-   }
-
-   void generateJson3(string& json) {
-	  json += "{\"action\":3,\"data\":{\"teams\":[";
-
-	  bool empty = true;
-	  for (std::map<unsigned int, Team*>::iterator iter = all_teams.begin(); iter != all_teams.end(); ++iter)
-	  {
-		 if (!empty) {
-			json += ",";
-		 }
-		 json += "{\"id\":";
-		 json += to_string(iter->first);
-		 json += ",\"name\":\"";
-		 json += iter->second->name;
-		 json += "\",\"owner\":{\"id\":";
-		 json += to_string(iter->second->owner->id);
-		 json += ",\"name\":\"";
-		 json += iter->second->owner->name;
-		 json += "\"}}";
-		 empty = false;
-	  }
-
-	  json += "]}}";
-   }
-
-   void generateJson4(string& json, Tour& tour) {
-	  json += "{\"action\":4,\"data\":{\"tours\":[";
-	  json += "{\"id\":";
-	  json += to_string(tour.id);
-	  json += ",\"name\":\"";
-	  json += tour.name;
-
-
-	  json += "\",\"home\":{\"id\":";
-	  json += to_string(tour.home->id);
-	  json += ",\"name\":\"";
-	  json += tour.home->name;
-
-	  json += "\"},\"away\":{\"id\":";
-	  json += to_string(tour.away->id);
-	  json += ",\"name\":\"";
-	  json += tour.away->name;
-
-
-	  json += "\"},\"owner\":{\"id\":";
-	  json += to_string(tour.owner->id);
-	  json += ",\"name\":\"";
-	  json += tour.owner->name;
-	  json += "\"}}]}}";
-   }
-
-   void generateJson4(string& json) {
-	  json += "{\"action\":4,\"data\":{\"tours\":[";
-
-	  bool empty = true;
-	  for (std::map<unsigned int, Tour*>::iterator iter = all_tours.begin(); iter != all_tours.end(); ++iter)
-	  {
-		 if (!empty) {
-			json += ",";
-		 }
-		 json += "{\"id\":";
-		 json += to_string(iter->first);
-		 json += ",\"name\":\"";
-		 json += iter->second->name;
-
-
-		 json += "\",\"home\":{\"id\":";
-		 json += to_string(iter->second->home->id);
-		 json += ",\"name\":\"";
-		 json += iter->second->home->name;
-
-		 json += "\"},\"away\":{\"id\":";
-		 json += to_string(iter->second->away->id);
-		 json += ",\"name\":\"";
-		 json += iter->second->away->name;
-
-
-		 json += "\"},\"owner\":{\"id\":";
-		 json += to_string(iter->second->owner->id);
-		 json += ",\"name\":\"";
-		 json += iter->second->owner->name;
-		 json += "\"}}";
-		 empty = false;
-	  }
-
-	  json += "]}}";
-   }
-
-   void generateJson7(string& json, Team& team) {
-	  json += "{\"action\":7,\"data\":{\"teams\":[";
-	  json += "{\"id\":";
-	  json += to_string(team.id);
-	  json += "}]}}";
-   }
-
 
    virtual bool handleConnection(CivetServer* server,
 	  const struct mg_connection* conn) {
@@ -228,15 +73,33 @@ class WebsocketHandler : public CivetWebSocketHandler {
    virtual void handleReadyState(CivetServer* server,
 	  struct mg_connection* conn) {
 	  printf("WS ready\n");
+   }
 
-	  string response = "{\"actions\":[";
-	  generateJson2(response);
-	  response += ",";
-	  generateJson3(response);
-	  response += ",";
-	  generateJson4(response);
-	  response += "]}";
-	  mg_websocket_write(conn, MG_WEBSOCKET_OPCODE_TEXT, response.c_str(), response.length());
+   void sendUpdatedUser(User* user) {
+	  JsonObject jo_root;
+	  JsonObject* jo_update= new JsonObject();
+	  vector<JsonValue*>* ja_users = new vector<JsonValue*>();
+
+
+	  JsonValue* jv_user = new JsonValue();
+	  jv_user->m_type = JsonValueTypeObject;
+
+	  JsonObject* jo_user = new JsonObject();
+	  user->generateJson(*jo_user);
+	  jv_user->m_data.u_jsonObject = jo_user;
+
+	  ja_users->push_back(jv_user);
+
+
+	  jo_update->AddNameValuePairArray("users", ja_users);
+	  jo_root.AddNameValuePairObject("update", jo_update);
+
+
+
+	  string response = "";
+	  stringifyObject(response, jo_root, FORMAT_JSON_OUTPUT);
+	  broadcast(response);
+	  cout << "<- " << response << endl;
    }
 
    virtual bool handleData(CivetServer* server,
@@ -251,211 +114,512 @@ class WebsocketHandler : public CivetWebSocketHandler {
 	  printf("WS got %lu bytes: \r\n", (long unsigned)data_len);
 	  data[data_len] = '\0';
 
-	  cout << data << endl;
+	  cout << "-> " << data << endl;
 
 	  unsigned int idx = 0;
 	  JsonObject jsonRoot;
 	  parseObject(jsonRoot, data, idx, data_len);
-	  vector<JsonValue*>* jsonArray = jsonRoot.m_nameValuePair.at(0)->jsonValue.m_data.u_jsonArray;
-	  for (auto& iter : *jsonArray) {
-		 JsonObject* jsonObject = iter->m_data.u_jsonObject;
-		 if (jsonObject->m_nameValuePair.at(0)->name._Equal("action")) {
-			int action = stoi(*jsonObject->m_nameValuePair.at(0)->jsonValue.m_data.u_number);
-			JsonObject* jsonData = jsonObject->m_nameValuePair.at(1)->jsonValue.m_data.u_jsonObject;
-			switch (action)
-			{
-			case 1://Authenticate
-			   if (jsonData->m_nameValuePair.size() >= 1) {
-				  User* user = nullptr;
+	  for (auto& request : jsonRoot.m_nameValuePair) {
+		 if (request->name._Equal("auth")) {
+			User* user = nullptr;
 
-				  bool idSet = false;
-				  unsigned int id = 0;
+			bool idSet = false;
+			unsigned int id = 0;
 
-				  string* name = nullptr;
+			string* name = nullptr;
 
-				  for (auto& value : jsonData->m_nameValuePair) {
-					 if (value->name._Equal("id")) {
-						id = stoi(*value->jsonValue.m_data.u_number);
-						idSet = true;
-					 }
-					 else if (value->name._Equal("name")) {
-						name = value->jsonValue.m_data.u_string;
+			for (auto& value : request->jsonValue.m_data.u_jsonObject->m_nameValuePair) {
+			   if (value->name._Equal("id")) {
+				  id = stoi(*value->jsonValue.m_data.u_number);
+				  idSet = true;
+			   }
+			   else if (value->name._Equal("name")) {
+				  name = value->jsonValue.m_data.u_string;
+			   }
+			}
+
+			if (!idSet || id >= clientCounter) {
+			   id = clientCounter++;
+			   idSet = true;
+			   user = new User();
+			   all_users[id] = user;
+			}
+			else {
+			   user = all_users[id];
+			}
+
+			user->id = id;
+			if (name != nullptr) {
+			   user->name = *name;
+			}
+			if (user->name._Equal("")) {
+			   user->name = "User ";
+			   user->name += to_string(id);
+			}
+			user->conn = conn;
+
+
+			JsonObject out_jo_root;
+			JsonObject* out_jo_auth = new JsonObject();
+			user->generateJson(*out_jo_auth);
+
+			out_jo_root.AddNameValuePairObject("auth", out_jo_auth);
+
+			string response;
+			stringifyObject(response, out_jo_root, FORMAT_JSON_OUTPUT);
+			mg_websocket_write(conn, MG_WEBSOCKET_OPCODE_TEXT, response.c_str(), response.length());
+			cout << "<- " << response << endl;
+
+
+			sendUpdatedUser(user);
+
+
+		 }
+		 else if (request->name._Equal("get")) {
+			JsonObject out_jo_root;
+			JsonObject* out_jo_get = new JsonObject();
+
+			vector<JsonValue*>* out_ja_users = new vector<JsonValue*>();
+			vector<JsonValue*>* out_ja_teams = new vector<JsonValue*>();
+			vector<JsonValue*>* out_ja_tours = new vector<JsonValue*>();
+
+			for (auto& data : request->jsonValue.m_data.u_jsonObject->m_nameValuePair) {
+			   if (data->name._Equal("users")) {
+				  auto* userData = data->jsonValue.m_data.u_jsonArray;
+				  if (userData->size() == 0) {
+
+					 for (std::map<unsigned int, User*>::iterator user = all_users.begin(); user != all_users.end(); ++user)
+					 {
+						JsonValue* out_jv_user = new JsonValue();
+						out_jv_user->m_type = JsonValueTypeObject;
+
+						JsonObject* out_jo_user = new JsonObject();
+
+						user->second->generateJson(*out_jo_user);
+
+						out_jv_user->m_data.u_jsonObject = out_jo_user;
+
+						out_ja_users->push_back(out_jv_user);
 					 }
 				  }
+			   }
+			   else if (data->name._Equal("teams")) {
+				  auto* teamData = data->jsonValue.m_data.u_jsonArray;
+				  if (teamData->size() == 0) {
 
-				  if (!idSet || id >= clientCounter) {
-					 id = clientCounter++;
-					 idSet = true;
-					 user = new User();
-					 all_users[id] = user;
+					 for (std::map<unsigned int, Team*>::iterator team = all_teams.begin(); team != all_teams.end(); ++team)
+					 {
+						JsonValue* out_jv_team = new JsonValue();
+						out_jv_team->m_type = JsonValueTypeObject;
+
+						JsonObject* out_jo_team = new JsonObject();
+
+						team->second->generateJson(*out_jo_team);
+
+						out_jv_team->m_data.u_jsonObject = out_jo_team;
+
+						out_ja_teams->push_back(out_jv_team);
+					 }
+				  }
+			   }
+			   else if (data->name._Equal("tours")) {
+				  auto* tourData = data->jsonValue.m_data.u_jsonArray;
+				  if (tourData->size() == 0) {
+
+					 for (std::map<unsigned int, Tour*>::iterator tour = all_tours.begin(); tour != all_tours.end(); ++tour)
+					 {
+						JsonValue* out_jv_tour = new JsonValue();
+						out_jv_tour->m_type = JsonValueTypeObject;
+
+						JsonObject* out_jo_tour = new JsonObject();
+
+						tour->second->generateJson(*out_jo_tour);
+
+						out_jv_tour->m_data.u_jsonObject = out_jo_tour;
+
+						out_ja_tours->push_back(out_jv_tour);
+					 }
+
 				  }
 				  else {
-					 user = all_users[id];
+					 for (auto& jv_tour : *tourData) {
+						JsonValue* out_jv_tour = new JsonValue();
+						out_jv_tour->m_type = JsonValueTypeObject;
+
+						JsonObject* out_jo_tour = new JsonObject();
+
+						
+
+
+						JsonObject* jo_tour = jv_tour->m_data.u_jsonObject;
+						unsigned int id = 0;
+						vector<JsonValue*>* ja_matches = nullptr;
+						for (auto& nvp_tour : jo_tour->m_nameValuePair) {
+						   if (nvp_tour->name._Equal("id")) {
+							  id = stoi(*nvp_tour->jsonValue.m_data.u_number);
+						   }
+						   else if (nvp_tour->name._Equal("matches")) {
+							  ja_matches = nvp_tour->jsonValue.m_data.u_jsonArray;
+						   }
+						}
+
+						Tour& tour = *all_tours[id];
+
+						tour.generateJson(*out_jo_tour);
+
+						if (ja_matches != nullptr) {
+						   if (ja_matches->empty()) {
+
+							  vector<JsonValue*>* out_ja_matches = new vector<JsonValue*>();
+
+							  for (auto& matchIter : tour.matches) {
+								 JsonValue* out_jv_match = new JsonValue();
+								 out_jv_match->m_type = JsonValueTypeObject;
+
+								 JsonObject* out_jo_match = new JsonObject();
+
+								 matchIter.second.generateJson(*out_jo_match);
+
+								 out_jv_match->m_data.u_jsonObject = out_jo_match;
+
+								 out_ja_matches->push_back(out_jv_match);
+							  }
+
+							  out_jo_tour->AddNameValuePairArray("matches", out_ja_matches);
+						   }
+						}
+
+						out_jv_tour->m_data.u_jsonObject = out_jo_tour;
+						out_ja_tours->push_back(out_jv_tour);
+					 }
 				  }
-
-				  user->id = id;
-				  if (name != nullptr) {
-					 user->name = *name;
-				  }
-				  if (user->name._Equal("")) {
-					 user->name = "User ";
-					 user->name += to_string(id);
-				  }
-				  user->conn = conn;
-
-				  string response = "{\"actions\":[";
-				  generateJson1(response, *user);
-				  response += "]}";
-				  mg_websocket_write(conn, MG_WEBSOCKET_OPCODE_TEXT, response.c_str(), response.length());
-
-
-				  response = "{\"actions\":[";
-				  generateJson2(response, *user);
-				  response += "]}";
-				  broadcast(response);
 			   }
-			   break;
-			case 2: //User/Team/Tour info
-			   break;
-			case 3: //Create team
-			   break;
-			case 4:
-			   break;
-			case 5:
-			   if (jsonData->m_nameValuePair.size() >= 1) {
-				  string* name = nullptr;
-				  unsigned int ownerId = 0;
-
-				  for (auto& value : jsonData->m_nameValuePair) {
-					 if (value->name._Equal("owner-id")) {
-						ownerId = stoi(*value->jsonValue.m_data.u_number);
-					 }
-					 else if (value->name._Equal("name")) {
-						name = value->jsonValue.m_data.u_string;
-					 }
-				  }
-
-				  unsigned int id = teamCounter++;
-				  Team* newTeam = new Team();
-				  newTeam->id = id;
-				  if (name != nullptr) {
-					 newTeam->name = *name;
-				  }
-				  if (newTeam->name._Equal("")) {
-					 newTeam->name = "Team ";
-					 newTeam->name += to_string(id);
-				  }
-				  User* owner = all_users[ownerId];
-				  newTeam->owner = owner;
-				  newTeam->users.push_back(owner);
-
-				  all_teams[id] = newTeam;
-
-				  string response = "{\"actions\":[";
-				  generateJson3(response, *newTeam);
-				  response += "]}";
-				  broadcast(response);
-			   }
-			   break;
-			case 6:
-			   if (jsonData->m_nameValuePair.size() >= 1) {
-				  string* name = nullptr;
-				  unsigned int homeId = 0;
-				  unsigned int awayId = 0;
-				  unsigned int ownerId = 0;
-
-				  for (auto& value : jsonData->m_nameValuePair) {
-					 if (value->name._Equal("home-id")) {
-						homeId = stoi(*value->jsonValue.m_data.u_number);
-					 }
-					 else if (value->name._Equal("away-id")) {
-						awayId = stoi(*value->jsonValue.m_data.u_number);
-					 }
-					 else if (value->name._Equal("owner-id")) {
-						ownerId = stoi(*value->jsonValue.m_data.u_number);
-					 }
-					 else if (value->name._Equal("name")) {
-						name = value->jsonValue.m_data.u_string;
-					 }
-				  }
-
-				  unsigned int id = tourCounter++;
-				  Tour* newTour = new Tour();
-				  newTour->id = id;
-				  if (name != nullptr) {
-					 newTour->name = *name;
-				  }
-				  if (newTour->name._Equal("")) {
-					 newTour->name = "Tour ";
-					 newTour->name += to_string(id);
-				  }
-
-				  Team* home = all_teams[homeId];
-				  newTour->home = home;
-
-				  Team* away = all_teams[awayId];
-				  newTour->away = away;
-
-				  User* owner = all_users[ownerId];
-				  newTour->owner = owner;
-
-				  all_tours[id] = newTour;
-
-				  string response = "{\"actions\":[";
-				  generateJson4(response, *newTour);
-				  response += "]}";
-				  broadcast(response);
-			   }
-			   break;
-			case 7:
-			   if (jsonData->m_nameValuePair.size() >= 1) {
-				  unsigned int id = 0;
-
-				  for (auto& value : jsonData->m_nameValuePair) {
-					 if (value->name._Equal("id")) {
-						id = stoi(*value->jsonValue.m_data.u_number);
-					 }
-				  }
-
-				  string response = "{\"actions\":[";
-				  generateJson7(response, *all_teams[id]);
-				  response += "]}";
-				  broadcast(response);
-
-				  all_teams.erase(id);
-			   }
-			   break;
-			case 8:
-			   break;
-			case 9:
-			   break;
 			}
+
+			if (!out_ja_users->empty())
+			   out_jo_get->AddNameValuePairArray("users", out_ja_users);
+			else
+			   delete out_ja_users;
+
+			if (!out_ja_tours->empty())
+			   out_jo_get->AddNameValuePairArray("tours", out_ja_tours);
+			else
+			   delete out_ja_tours;
+
+			if (!out_ja_teams->empty())
+			   out_jo_get->AddNameValuePairArray("teams", out_ja_teams);
+			else
+			   delete out_ja_teams;
+
+			out_jo_root.AddNameValuePairObject("get", out_jo_get);
+			string response;
+			stringifyObject(response, out_jo_root, FORMAT_JSON_OUTPUT);
+			mg_websocket_write(conn, MG_WEBSOCKET_OPCODE_TEXT, response.c_str(), response.length());
+			cout << "<- " << response << endl;
+		 }
+		 else if (request->name._Equal("update")) {
+			JsonObject out_jo_root;
+			JsonObject* out_jo_update = new JsonObject();
+
+			vector<JsonValue*>* out_ja_users = new vector<JsonValue*>();
+
+			for (auto& data : request->jsonValue.m_data.u_jsonObject->m_nameValuePair) {
+			   if (data->name._Equal("users")) {
+				  auto* ja_users = data->jsonValue.m_data.u_jsonArray;
+				  for (auto& jv_user : *ja_users) {
+					 JsonObject* jo_user = jv_user->m_data.u_jsonObject;
+
+					 unsigned int id = 0;
+					 string* name = nullptr;
+					 bool nameSet = false;
+					 int teamId = -1;
+					 bool teamIdSet = false;
+
+					 for (auto& nvp_team : jo_user->m_nameValuePair) {
+						if (nvp_team->name._Equal("id")) {
+						   id = stoi(*nvp_team->jsonValue.m_data.u_number);
+						}
+						else if (nvp_team->name._Equal("name")) {
+						   name = nvp_team->jsonValue.m_data.u_string;
+						   nameSet = true;
+						}
+						else if (nvp_team->name._Equal("team-id")) {
+						   teamId = stoi(*nvp_team->jsonValue.m_data.u_number);
+						   teamIdSet = true;
+						}
+					 }
+
+					 auto& user = all_users[id];
+
+					 if (nameSet) {
+						user->name = *name;
+					 }
+					 if (teamIdSet) {
+						if (teamId == -1) {
+						   user->team = nullptr;
+						}
+						else {
+						   user->team = all_teams[teamId];
+						   user->team->users.push_back(user);
+						}
+					 }
+
+
+
+					 JsonValue* out_jv_user = new JsonValue();
+					 out_jv_user->m_type = JsonValueTypeObject;
+					 JsonObject* out_jo_user = new JsonObject();
+					 user->generateJson(*out_jo_user);
+					 out_jv_user->m_data.u_jsonObject = out_jo_user;
+					 out_ja_users->push_back(out_jv_user);
+				  }
+
+
+			   }
+			}
+
+			if (!out_ja_users->empty())
+			   out_jo_update->AddNameValuePairArray("users", out_ja_users);
+			else
+			   delete out_ja_users;
+			
+
+
+			out_jo_root.AddNameValuePairObject("update", out_jo_update);
+			string response;
+			stringifyObject(response, out_jo_root, FORMAT_JSON_OUTPUT);
+			broadcast(response);
+			cout << "<- " << response << endl;
+		 }
+		 else if (request->name._Equal("create")) {
+			JsonObject out_jo_root;
+			JsonObject* out_jo_create = new JsonObject();
+
+			vector<JsonValue*>* out_ja_teams = new vector<JsonValue*>();
+			vector<JsonValue*>* out_ja_tours = new vector<JsonValue*>();
+
+			for (auto& data : request->jsonValue.m_data.u_jsonObject->m_nameValuePair) {
+			   if (data->name._Equal("teams")) {
+				  auto* ja_teams = data->jsonValue.m_data.u_jsonArray;
+				  for (auto& jv_team : *ja_teams) {
+					 JsonObject* jo_team = jv_team->m_data.u_jsonObject;
+
+					 string* name = nullptr;
+					 unsigned int ownerId = 0;
+
+					 for (auto& nvp_team: jo_team->m_nameValuePair) {
+						if (nvp_team->name._Equal("owner-id")) {
+						   ownerId = stoi(*nvp_team->jsonValue.m_data.u_number);
+						}
+						else if (nvp_team->name._Equal("name")) {
+						   name = nvp_team->jsonValue.m_data.u_string;
+						}
+					 }
+
+					 unsigned int id = teamCounter++;
+					 Team* newTeam = new Team();
+					 newTeam->id = id;
+					 if (name != nullptr) {
+						newTeam->name = *name;
+					 }
+					 if (newTeam->name._Equal("")) {
+						newTeam->name = "Team ";
+						newTeam->name += to_string(id);
+					 }
+					 User* owner = all_users[ownerId];
+					 newTeam->owner = owner;
+
+					 all_teams[id] = newTeam;
+
+					 JsonValue* out_jv_team = new JsonValue();
+					 out_jv_team->m_type = JsonValueTypeObject;
+					 JsonObject* out_jo_team = new JsonObject();
+					 newTeam->generateJson(*out_jo_team);
+					 out_jv_team->m_data.u_jsonObject = out_jo_team;
+					 out_ja_teams->push_back(out_jv_team);
+				  }
+			   }else if (data->name._Equal("tours")) {
+				  auto* ja_tours = data->jsonValue.m_data.u_jsonArray;
+				  for (auto& jv_tour : *ja_tours) {
+					 JsonObject* jo_tour = jv_tour->m_data.u_jsonObject;
+
+
+					 string* name = nullptr;
+					 unsigned int homeId = 0;
+					 unsigned int awayId = 0;
+					 unsigned int ownerId = 0;
+
+					 for (auto& nvp_tour : jo_tour->m_nameValuePair) {
+						if (nvp_tour->name._Equal("home-id")) {
+						   homeId = stoi(*nvp_tour->jsonValue.m_data.u_number);
+						}
+						else if (nvp_tour->name._Equal("away-id")) {
+						   awayId = stoi(*nvp_tour->jsonValue.m_data.u_number);
+						}
+						else if (nvp_tour->name._Equal("owner-id")) {
+						   ownerId = stoi(*nvp_tour->jsonValue.m_data.u_number);
+						}
+						else if (nvp_tour->name._Equal("name")) {
+						   name = nvp_tour->jsonValue.m_data.u_string;
+						}
+					 }
+
+					 unsigned int id = tourCounter++;
+					 Tour* newTour = new Tour();
+					 newTour->id = id;
+					 if (name != nullptr) {
+						newTour->name = *name;
+					 }
+					 if (newTour->name._Equal("")) {
+						newTour->name = "Tour ";
+						newTour->name += to_string(id);
+					 }
+
+					 Team* home = all_teams[homeId];
+					 newTour->home = home;
+
+					 Team* away = all_teams[awayId];
+					 newTour->away = away;
+
+					 User* owner = all_users[ownerId];
+					 newTour->owner = owner;
+					 
+
+					 all_tours[id] = newTour;
+
+
+
+					 JsonValue* out_jv_tour = new JsonValue();
+					 out_jv_tour->m_type = JsonValueTypeObject;
+					 JsonObject* out_jo_tour = new JsonObject();
+					 newTour->generateJson(*out_jo_tour);
+					 out_jv_tour->m_data.u_jsonObject = out_jo_tour;
+					 out_ja_tours->push_back(out_jv_tour);
+				  }
+			   }
+			}
+
+			if (!out_ja_tours->empty())
+			   out_jo_create->AddNameValuePairArray("tours", out_ja_tours);
+			else
+			   delete out_ja_tours;
+
+			if (!out_ja_teams->empty())
+			   out_jo_create->AddNameValuePairArray("teams", out_ja_teams);
+			else
+			   delete out_ja_teams;
+
+			out_jo_root.AddNameValuePairObject("create", out_jo_create);
+			string response;
+			stringifyObject(response, out_jo_root, FORMAT_JSON_OUTPUT);
+			broadcast(response);
+			cout << "<- " << response << endl;
+		 }
+		 else if (request->name._Equal("delete")) {
+			JsonObject out_jo_root;
+			JsonObject* out_jo_delete = new JsonObject();
+
+			vector<JsonValue*>* out_ja_teams = new vector<JsonValue*>();
+			vector<JsonValue*>* out_ja_tours = new vector<JsonValue*>();
+
+
+			for (auto& data : request->jsonValue.m_data.u_jsonObject->m_nameValuePair) {
+			   if (data->name._Equal("teams")) {
+				  auto* ja_teams = data->jsonValue.m_data.u_jsonArray;
+				  for (auto& jv_team : *ja_teams) {
+					 JsonObject* jo_team = jv_team->m_data.u_jsonObject;
+
+					 unsigned int id = 0;
+
+					 for (auto& nvp_team : jo_team->m_nameValuePair) {
+						if (nvp_team->name._Equal("id")) {
+						   id = stoi(*nvp_team->jsonValue.m_data.u_number);
+						}
+					 }
+
+					 auto& team = all_teams[id];
+
+					 for (vector<User*>::iterator user = team->users.begin(); user != team->users.end(); ++user) {
+						(*user)->team = nullptr;
+						sendUpdatedUser(*user);
+					 }
+
+					 team->users.clear();
+
+					 for (std::map<unsigned int, Tour*>::iterator tourIter = all_tours.begin(); tourIter != all_tours.end(); ++tourIter) {
+						unsigned int tourId = tourIter->first;
+						Tour* tour = tourIter->second;
+
+						if (tour->home == team || tour->away == team) {
+						   JsonValue* out_jv_tour = new JsonValue();
+						   out_jv_tour->m_type = JsonValueTypeObject;
+						   JsonObject* out_jo_tour = new JsonObject();
+						   out_jo_tour->AddNameValuePairNumber("id", tourId);
+						   out_jv_tour->m_data.u_jsonObject = out_jo_tour;
+						   out_ja_tours->push_back(out_jv_tour);
+
+
+						   all_tours.erase(tourId);
+						   free(tour);
+						   tourIter = all_tours.begin();
+						   if (tourIter == all_tours.end()) {
+							  break;
+						   }
+						}
+					 }
+					 
+
+					 JsonValue* out_jv_team = new JsonValue();
+					 out_jv_team->m_type = JsonValueTypeObject;
+					 JsonObject* out_jo_team = new JsonObject();
+					 out_jo_team->AddNameValuePairNumber("id", id);
+					 out_jv_team->m_data.u_jsonObject = out_jo_team;
+					 out_ja_teams->push_back(out_jv_team);
+
+					 all_teams.erase(id);
+				  }
+			   }else if (data->name._Equal("tours")) {
+				  auto* ja_tours = data->jsonValue.m_data.u_jsonArray;
+				  for (auto& jv_tour : *ja_tours) {
+					 JsonObject* jo_tour = jv_tour->m_data.u_jsonObject;
+
+					 unsigned int id = 0;
+
+					 for (auto& nvp_tour : jo_tour->m_nameValuePair) {
+						if (nvp_tour->name._Equal("id")) {
+						   id = stoi(*nvp_tour->jsonValue.m_data.u_number);
+						}
+					 }
+
+					 JsonValue* out_jv_tour = new JsonValue();
+					 out_jv_tour->m_type = JsonValueTypeObject;
+					 JsonObject* out_jo_tour = new JsonObject();
+					 out_jo_tour->AddNameValuePairNumber("id", id);
+					 out_jv_tour->m_data.u_jsonObject = out_jo_tour;
+					 out_ja_tours->push_back(out_jv_tour);
+
+					 all_tours.erase(id);
+				  }
+			   }
+			}
+
+			if (!out_ja_tours->empty())
+			   out_jo_delete->AddNameValuePairArray("tours", out_ja_tours);
+			else
+			   delete out_ja_tours;
+
+			if (!out_ja_teams->empty())
+			   out_jo_delete->AddNameValuePairArray("teams", out_ja_teams);
+			else
+			   delete out_ja_teams;
+
+			out_jo_root.AddNameValuePairObject("delete", out_jo_delete);
+			string response;
+			stringifyObject(response, out_jo_root, FORMAT_JSON_OUTPUT);
+			broadcast(response);
+			cout << "<- " << response << endl;
 		 }
 	  }
-
-
-
-	  /*string json = "";
-	  stringifyObject(json, jsonObject, false);
-	  cout << json << endl;
-	  json = "";
-	  stringifyObject(json, jsonObject, true);
-	  cout << json << endl;*/
-	  /*
-	  for (int i = 0; i < data_len; i++) {
-		 gameData[i] = data[i];
-	  }
-	  gameData[data_len] = '\0';
-
-	  printf(gameData);
-
-	  for (auto & value : all_connections) {
-		 if (value != conn) {
-			mg_websocket_write(value, MG_WEBSOCKET_OPCODE_TEXT, gameData, strlen(gameData));
-		 }
-	  }
-	  */
-
 	  return true;
    }
 
@@ -464,10 +628,6 @@ class WebsocketHandler : public CivetWebSocketHandler {
 	  printf("WS closed\n");
    }
 };
-
-
-
-
 
 int
 main(int argc, char* argv[])

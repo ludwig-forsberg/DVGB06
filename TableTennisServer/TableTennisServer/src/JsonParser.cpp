@@ -44,7 +44,7 @@ JsonValue::~JsonValue()
 }
 
 
-char getNextChar(const char* str2parse, unsigned int& idx, const size_t len, bool adjustRowNumber)
+char getNextChar(const char *str2parse, unsigned int &idx, const size_t len, bool adjustRowNumber)
 {
    //idx++;
    char nextChar = str2parse[idx];
@@ -59,7 +59,7 @@ char getNextChar(const char* str2parse, unsigned int& idx, const size_t len, boo
    return nextChar;
 }
 
-void eatChar(char char2eat, const char* str2parse, unsigned int& idx, const size_t len)
+void eatChar(char char2eat, const char *str2parse, unsigned int &idx, const size_t len)
 {
    if (idx >= len)
    {
@@ -91,7 +91,7 @@ void eatChar(char char2eat, const char* str2parse, unsigned int& idx, const size
    }
 }
 
-bool isChar(char char2check, const char* str2parse, unsigned int& idx, const size_t len)
+bool isChar(char char2check, const char *str2parse, unsigned int &idx, const size_t len)
 {
    if (str2parse[idx] == char2check) {
       return true;
@@ -103,13 +103,13 @@ bool isChar(char char2check, const char* str2parse, unsigned int& idx, const siz
 
 }
 
-void parseArray(vector<JsonValue*>& jsonArray, const char* str2parse, unsigned int& idx, const size_t len)
+void parseArray(vector<JsonValue*> &jsonArray, const char *str2parse, unsigned int &idx, const size_t len)
 {
 
    eatChar('[', str2parse, idx, len);
    unsigned int storedIdx = idx;
    if (getNextChar(str2parse, storedIdx, len) != ']') {
-      JsonValue* jsonValue = new JsonValue;
+      JsonValue *jsonValue = new JsonValue;
       parseValue(*jsonValue, str2parse, idx, len);
       jsonArray.push_back(jsonValue);
       while (isChar(',', str2parse, idx, len))
@@ -123,7 +123,7 @@ void parseArray(vector<JsonValue*>& jsonArray, const char* str2parse, unsigned i
    eatChar(']', str2parse, idx, len);
 }
 
-void parseString(string& u_string, const char* str2parse, unsigned int& idx, const size_t len)
+void parseString(string &u_string, const char *str2parse, unsigned int &idx, const size_t len)
 {
    u_string = "";
    eatChar('"', str2parse, idx, len);
@@ -140,11 +140,11 @@ void parseString(string& u_string, const char* str2parse, unsigned int& idx, con
    //u_string += '\0';
 }
 
-void parseNumber(string& u_number, const char* str2parse, unsigned int& idx, const size_t len)
+void parseNumber(string &u_number, const char *str2parse, unsigned int &idx, const size_t len)
 {
    u_number = "";
    //eatChar('"', str2parse, idx, len);
-   while ((int)str2parse[idx] == (int)'.' || ((int)str2parse[idx] >= (int)'0' && (int)str2parse[idx] <= (int)'9'))
+   while ((int)str2parse[idx] == (int)'.' || (int)str2parse[idx] == (int)'-' || ((int)str2parse[idx] >= (int)'0' && (int)str2parse[idx] <= (int)'9'))
    {
       u_number += str2parse[idx];
       idx++;
@@ -153,7 +153,7 @@ void parseNumber(string& u_number, const char* str2parse, unsigned int& idx, con
    //u_number += '\0';
 }
 
-bool checkCharacterPattern(string wantedPattern, const char* str2parse, unsigned int& idx, const size_t len)
+bool checkCharacterPattern(string wantedPattern, const char *str2parse, unsigned int &idx, const size_t len)
 {
    bool valid = true;
    size_t endIdx = idx + wantedPattern.size();
@@ -170,22 +170,22 @@ bool checkCharacterPattern(string wantedPattern, const char* str2parse, unsigned
    return valid;
 }
 
-void parseNull(const char* str2parse, unsigned int& idx, const size_t len)
+void parseNull(const char *str2parse, unsigned int &idx, const size_t len)
 {
    bool valid = checkCharacterPattern("null", str2parse, idx, len);
 }
 
-void parseTrue(const char* str2parse, unsigned int& idx, const size_t len)
+void parseTrue(const char *str2parse, unsigned int &idx, const size_t len)
 {
    bool valid = checkCharacterPattern("true", str2parse, idx, len);
 }
 
-void parseFalse(const char* str2parse, unsigned int& idx, const size_t len)
+void parseFalse(const char *str2parse, unsigned int &idx, const size_t len)
 {
    bool valid = checkCharacterPattern("false", str2parse, idx, len);
 }
 
-void parseValue(JsonValue& jsonValue, const char* str2parse, unsigned int& idx, const size_t len)
+void parseValue(JsonValue &jsonValue, const char *str2parse, unsigned int &idx, const size_t len)
 {
    char nextChar = getNextChar(str2parse, idx, len, true);
    if (nextChar == '{')
@@ -230,14 +230,14 @@ void parseValue(JsonValue& jsonValue, const char* str2parse, unsigned int& idx, 
 
 }
 
-void parseObject(JsonObject& jsonRootObject, const char* str2parse, unsigned int& idx, const size_t len)
+void parseObject(JsonObject &jsonRootObject, const char *str2parse, unsigned int &idx, const size_t len)
 {
    // string : value and 0 or more combination of , string : value
 
    eatChar('{', str2parse, idx, len);
    unsigned int storedIdx = idx;
    if (getNextChar(str2parse, storedIdx, len) != '}') {
-      JsonNameValuePair* valuePair = new JsonNameValuePair;
+      JsonNameValuePair *valuePair = new JsonNameValuePair;
 
       jsonRootObject.m_nameValuePair.push_back(valuePair);
 
@@ -278,14 +278,14 @@ static void indent(string& output)
       output.append("   ");
    }
 }
-void printObject(const char* name, JsonObject& jsonObject)
+void printObject(const char *name, JsonObject &jsonObject) 
 {
    indent();
    cout << name << "(" << "Object" << ")" << endl;
    g_objNumber++;
    for (unsigned int i = 0; i < jsonObject.m_nameValuePair.size(); i++)
    {
-      if (jsonObject.m_nameValuePair.at(i)->jsonValue.m_type == JsonValueTypeObject)
+      if (jsonObject.m_nameValuePair.at(i)->jsonValue.m_type == JsonValueTypeObject) 
       {
          printObject(jsonObject.m_nameValuePair.at(i)->name.c_str(), *jsonObject.m_nameValuePair.at(i)->jsonValue.m_data.u_jsonObject);
       }
@@ -406,13 +406,13 @@ void stringifyObject(string& output, const JsonObject& jsonObject, const bool fo
       output.append("\r\n");
 
    g_objNumber++;
-
+   
    size_t size = jsonObject.m_nameValuePair.size();
    for (unsigned int i = 0; i < size; i++)
    {
       if (jsonObject.m_nameValuePair.at(i)->jsonValue.m_type == JsonValueTypeObject)
       {
-         if (formatted)
+         if(formatted)
             indent(output);
          output.append("\"" + jsonObject.m_nameValuePair.at(i)->name + "\":");
          stringifyObject(output, *jsonObject.m_nameValuePair.at(i)->jsonValue.m_data.u_jsonObject, formatted);
@@ -426,7 +426,7 @@ void stringifyObject(string& output, const JsonObject& jsonObject, const bool fo
          g_objNumber++;
          if (formatted)
             output.append("\r\n");
-
+         
          //cout << jsonObject.m_nameValuePair.at(i)->name << "(" << "Array" << ")" << endl;
          stringifyArray(output, *jsonObject.m_nameValuePair.at(i)->jsonValue.m_data.u_jsonArray, formatted);
 
@@ -439,7 +439,7 @@ void stringifyObject(string& output, const JsonObject& jsonObject, const bool fo
       {
          if (formatted)
             indent(output);
-         output.append("\"" + jsonObject.m_nameValuePair.at(i)->name + "\":\"" + *jsonObject.m_nameValuePair.at(i)->jsonValue.m_data.u_string + "\"");
+         output.append("\"" +jsonObject.m_nameValuePair.at(i)->name + "\":\"" + *jsonObject.m_nameValuePair.at(i)->jsonValue.m_data.u_string + "\"");
       }
       else if (jsonObject.m_nameValuePair.at(i)->jsonValue.m_type == JsonValueTypeNumber)
       {
@@ -484,4 +484,89 @@ void stringifyObject(string& output, const JsonObject& jsonObject, const bool fo
    if (formatted)
       indent(output);
    output.append("}");
+}
+
+void JsonObject::AddNameValuePairNumber(const char* name, int value)
+{
+   JsonNameValuePair* jsonNameValuePair = new JsonNameValuePair();
+
+   jsonNameValuePair->name = string(name);
+   jsonNameValuePair->jsonValue.m_type = JsonValueTypeNumber;
+   if (jsonNameValuePair->jsonValue.m_data.u_number == NULL)
+      jsonNameValuePair->jsonValue.m_data.u_number = new string(to_string(value));
+   else
+      *jsonNameValuePair->jsonValue.m_data.u_number = to_string(value);
+
+   this->m_nameValuePair.push_back(jsonNameValuePair);
+}
+
+void JsonObject::AddNameValuePairBool(const char* name, bool value)
+{
+   JsonNameValuePair* jsonNameValuePair = new JsonNameValuePair();
+
+   jsonNameValuePair->name = string(name);
+   if(value)
+      jsonNameValuePair->jsonValue.m_type = JsonValueTypeTrue;
+   else
+      jsonNameValuePair->jsonValue.m_type = JsonValueTypeFalse;
+
+   this->m_nameValuePair.push_back(jsonNameValuePair);
+}
+
+
+void JsonObject::AddNameValuePairString(const char* name, const char* value)
+{
+   JsonNameValuePair* jsonNameValuePair = new JsonNameValuePair();
+
+   jsonNameValuePair->name = string(name);
+   jsonNameValuePair->jsonValue.m_type = JsonValueTypeString;
+   if (jsonNameValuePair->jsonValue.m_data.u_string == NULL)
+      jsonNameValuePair->jsonValue.m_data.u_string = new string(value);
+   else
+      *jsonNameValuePair->jsonValue.m_data.u_string = value;
+
+   this->m_nameValuePair.push_back(jsonNameValuePair);
+}
+
+void JsonObject::AddNameValuePairArray(const char* name, const int* values, const int count)
+{
+   JsonNameValuePair* jsonNameValuePair = new JsonNameValuePair();
+
+   jsonNameValuePair->name = string(name);
+   jsonNameValuePair->jsonValue.m_type = JsonValueTypeArray;
+   if (jsonNameValuePair->jsonValue.m_data.u_jsonArray == NULL)
+      jsonNameValuePair->jsonValue.m_data.u_jsonArray = new vector<JsonValue*>();
+   
+   for (int i = 0; i < count; i++) {
+      JsonValue* value = new JsonValue();
+      value->m_type = JsonValueTypeNumber;
+      value->m_data.u_number = new string(to_string(values[i]));
+      jsonNameValuePair->jsonValue.m_data.u_jsonArray->push_back(value);
+   }
+
+   this->m_nameValuePair.push_back(jsonNameValuePair);
+}
+
+void JsonObject::AddNameValuePairObject(const char* name, JsonObject* value)
+{
+   JsonNameValuePair* jsonNameValuePair = new JsonNameValuePair();
+
+   jsonNameValuePair->name = string(name);
+   jsonNameValuePair->jsonValue.m_type = JsonValueTypeObject;
+
+   jsonNameValuePair->jsonValue.m_data.u_jsonObject = value;
+
+   this->m_nameValuePair.push_back(jsonNameValuePair);
+}
+
+void JsonObject::AddNameValuePairArray(const char* name, vector<JsonValue*>* value)
+{
+   JsonNameValuePair* jsonNameValuePair = new JsonNameValuePair();
+
+   jsonNameValuePair->name = string(name);
+   jsonNameValuePair->jsonValue.m_type = JsonValueTypeArray;
+
+   jsonNameValuePair->jsonValue.m_data.u_jsonArray = value;
+
+   this->m_nameValuePair.push_back(jsonNameValuePair);
 }

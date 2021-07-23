@@ -147,14 +147,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp" />
-    <ClCompile Include="JsonParser.cpp" />
     <ClCompile Include="src\CivetServer.cpp" />
     <ClCompile Include="src\civetweb.c" />
+    <ClCompile Include="src\JsonParser.cpp" />
     <ClCompile Include="TableTennisServer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\handle_form.inl" />
     <None Include="src\md5.inl" />
+    <None Include="src\openssl_dl.inl" />
     <None Include="src\response.inl" />
     <None Include="src\sha1.inl" />
     <None Include="src\timer.inl" />
@@ -163,7 +164,7 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="include\CivetServer.h" />
     <ClInclude Include="include\civetweb.h" />
-    <ClInclude Include="JsonParser.h" />
+    <ClInclude Include="include\JsonParser.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

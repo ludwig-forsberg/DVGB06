@@ -9,16 +9,15 @@
     <link rel="stylesheet" href="./style/solid.min.css">
     <script src="./scripts/common-components.js"></script>
     <script src="./scripts/index.js"></script>
+    <script src="./scripts/qrcode2.js"></script>
 </head>
 <body>
-    
-    <h1 id="header"></h1>
-
+    <h1 id="header">User</h1>
     <h1>Users</h1>
     <table id="userTable">
         <tr>
-            <th>User</th>
-            <th>Team</th>
+            <th class="w50">User</th>
+            <th class="w50">Team</th>
         </tr>
     </table>
 
@@ -27,8 +26,8 @@
         <tr>
             <th>Team</th>
             <th>Owner</th>
-            <th></th>
-            <th><button-component onclick="showAddTeamPopup()">+</button-component></th>
+            <th class="w10"></th>
+            <th class="w10"><button-component onclick="showAddTeamPopup()" class="green">+</button-component></th>
         </tr>
     </table>
 
@@ -39,32 +38,47 @@
             <th>Home team</th>
             <th>Away team</th>
             <th>Owner</th>
-            <th><button-component onclick="showAddTourPopup()">+</button-component></th>
+            <th class="w10">URL</th>
+            <th class="w10">QR-code</th>
+            <th class="w10"><button-component onclick="showAddTourPopup()" class="green">+</button-component></th>
         </tr>
     </table>
 
     <div id="addTeamContainer" class="addTeam popup container">
-        <div class="addTeam popup content">
+        <div class="popup content">
             <input-component id="addTeamName" icon="users" placeholder="Name"></input-component>
-            <button-component id="addTeamButton" onclick="addTeam()">Add team</button-component>
+            <button-component id="addTeamButton" onclick="addTeam()" class="green">Add team</button-component>
+        </div>
+    </div>
+
+    <div id="teamUsersContainer" class="teamUsers popup container">
+        <div class="popup content">
+            <h1 id="teamUsersHeader"></h1>
+            <table id="teamUsersTable">
+                <tr>
+                    <th>User</th>
+                    <th></th>
+                </tr>
+            </table>
+            <button-component onclick="closeAllPopups()" class="green">Ok</button-component>
         </div>
     </div>
 
     <div id="addTourContainer" class="addTour popup container">
-        <div class="addTour popup content">
+        <div class="popup content">
             <input-component id="addTourName" icon="table-tennis" placeholder="Name"></input-component>
-            <p>Home Team</p>
-            <drop-down-component id="addTourHome" placeholder="Select.."></drop-down-component>
-            <p>Away Team</p>
-            <drop-down-component id="addTourAway" placeholder="Select.."></drop-down-component>
-            <button-component id="addTourButton" onclick="addTour()">Add tour</button-component>
+            <h2>Home Team</h2>
+            <drop-down-component id="addTourHome" icon="users" placeholder="Select.."></drop-down-component>
+            <h2>Away Team</h2>
+            <drop-down-component id="addTourAway" icon="users" placeholder="Select.."></drop-down-component>
+            <button-component id="addTourButton" onclick="addTour()" class="green">Add tour</button-component>
         </div>
     </div>
 
     <div id="loginContainer" class="login popup container">
-        <div class="login popup content">
+        <div class="popup content">
             <input-component id="loginInput" icon="user" placeholder="Name"></input-component>
-            <button-component id="loginButton" icon="sign-in-alt" onclick="login()">Login</button-component>
+            <button-component id="loginButton" icon="sign-in-alt" onclick="login()" class="green">Login</button-component>
         </div>
     </div>
 </body>

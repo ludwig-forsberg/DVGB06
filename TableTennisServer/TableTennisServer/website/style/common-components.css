@@ -1,3 +1,4 @@
+/*#region Common*/
 .noselect {
     -webkit-touch-callout: none; /* iOS Safari */
       -webkit-user-select: none; /* Safari */
@@ -8,143 +9,182 @@
                                     supported by Chrome, Edge, Opera and Firefox */
 }
 
+.fa,
+.fas{
+    position: absolute;
+}
+/*#endregion*/
 
-/*Input Component*/
-.input-component{
+
+/*#region Input Component*/
+input-component{
     display: block;
     background: #002550;
 }
 
-.input-component div{
+input-component div{
     display: flex;
-    
-    min-height: 4vh;
+    align-items: center;
+    height: 4vh;
     width: 100%;
 }
 
-.input-component span{
+input-component span{
     color: white;
     padding: 1vh;
     position: fixed;
 }
 
-.input-component span:not(.fas){
+input-component span:not(.fas){
     display: none;
 }
 
-.input-component input{
+input-component input{
     background: #375076;
     color: white;
     border-width: 0;
     text-align: center;
     padding: 0 4vh;
     flex: 1;
+    height: 100%;
 }
 
-.input-component input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+input-component input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
     color: #BBB;
     opacity: 1; /* Firefox */
 }
   
-.input-component input:-ms-input-placeholder { /* Internet Explorer 10-11 */
+input-component input:-ms-input-placeholder { /* Internet Explorer 10-11 */
     color: #BBB;
 }
   
-.input-component input::-ms-input-placeholder { /* Microsoft Edge */
+input-component input::-ms-input-placeholder { /* Microsoft Edge */
     color: #BBB;
 }
+/*#endregion*/
 
-/*Button Component*/
-.button-component{
+/*#region Button Component*/
+button-component{
     display: block;
+    background: #527AB4;
+}
+
+button-component:hover:not(.disabled){
+    background: #3d5a86;
+}
+
+button-component:active:not(.disabled){
+    background: #2f4668;
+}
+
+/*#region Green Button*/
+button-component.green:not(.disabled){
     background: #007643;
 }
 
-.button-component:hover{
-    display: block;
+button-component.green:hover:not(.disabled){
     background: #00502E;
 }
 
-.button-component:active{
+button-component.green:active:not(.disabled){
     background: #004326;
 }
+/*#endregion*/
 
-
-.button-component div{
-    display: flex;
-    min-height: 4vh;
-    width: 100%;
+/*#region Red Button*/
+button-component.red:not(.disabled){
+    background: #bd2a2a;
 }
 
-.button-component span{
+button-component.red:hover:not(.disabled){
+    background: #972222;
+}
+
+button-component.red:active:not(.disabled){
+    background: #771a1a;
+}
+/*#endregion*/
+
+
+button-component div{
+    display: flex;
+    height: 4vh;
+    width: 100%;
+    align-items: center;
+}
+
+button-component span{
     color: white;
     padding: 1vh;
     position: fixed;
-}
-
-.button-component span:not(.fas){
-    display: none;
-}
-
-.button-component p{
-    margin: auto;
-    color: white;
     pointer-events: none;
 }
 
-.button-component.disabled{
+button-component span:not(.fas){
+    display: none;
+}
+
+button-component p{
+    margin: auto;
+    color: white;
+    pointer-events: none;
+    padding: 0 4vh;
+}
+
+button-component.disabled{
     background: #4e4e4e;
 }
 
-.button-component.disabled p,
-.button-component.disabled span{
+button-component.disabled p,
+button-component.disabled span{
     opacity: 0.7;
 }
+/*#endregion*/
 
-/*Drop Down Component*/
-.drop-down-component{
+/*#region Drop Down Component*/
+drop-down-component{
     display: block;
 }
 
-.drop-down-component button{
+/*drop-down-component button-component{
     font-size: 2vh;
     width: 100%;
-}
+}*/
 
-.drop-down-component .values{
+drop-down-component .values{
     display: none;
     position: fixed;
-    background: #EEE;
-    
-    border-radius: 1vh;
+    background: #527AB4;
+    border-radius: 0 0 1vh 1vh;
+    border: .1vh solid white;;
+    z-index: 1;
+    overflow: hidden;
 }
 
-.drop-down-component .values.open{
+drop-down-component .values.open{
     display: grid;
 }
 
-.drop-down-component .values value{
+drop-down-component .values value{
     padding: .5vh;
     font-size: 2vh;
+    color: white;
 }
 
-.drop-down-component .values value.selected{
-    border: .1vh solid black;
+drop-down-component .values value.selected{
+    color: #45ff2c;
 }
 
-.drop-down-component .values value:first-child{
-    border-radius: 1vh 1vh 0 0;
-}
-
-.drop-down-component .values value:last-child{
+drop-down-component .values value:last-child{
     border-radius: 0 0 1vh 1vh;
 }
 
-.drop-down-component .values value:hover{
+drop-down-component .values value:hover{
     display: block;
-    background: rgb(201, 201, 201);
+    background: #3d5a86;
 }
 
-.drop-down-component .values value:active{
-    background: rgb(122, 122, 122);
+drop-down-component .values value:active{
+    background: #2f4668;
 }
+/*#endregion*/

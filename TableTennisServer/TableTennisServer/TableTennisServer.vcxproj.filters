@@ -24,10 +24,10 @@
     <ClCompile Include="src\civetweb.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Game.cpp">
+    <ClCompile Include="src\JsonParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="JsonParser.cpp">
+    <ClCompile Include="Game.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -47,6 +47,9 @@
     <None Include="src\timer.inl">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="src\openssl_dl.inl">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\CivetServer.h">
@@ -55,10 +58,10 @@
     <ClInclude Include="include\civetweb.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Game.h">
+    <ClInclude Include="include\JsonParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="JsonParser.h">
+    <ClInclude Include="Game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1073,7 +1073,6 @@ var QRCode;
             this._oQRCode = new QRCodeModel(_getTypeNumber(this._htOption.text, this._htOption.correctLevel), this._htOption.correctLevel);
             this._oQRCode.addData(this._htOption.text);
             this._oQRCode.make();
-            console.log(this._oQRCode);
             drawQRCode(el, this._oQRCode.modules);
         }
     };
