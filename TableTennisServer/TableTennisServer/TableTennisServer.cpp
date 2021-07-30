@@ -268,9 +268,9 @@ class WebsocketHandler : public CivetWebSocketHandler {
 						tour.generateJson(*out_jo_tour);
 
 						if (ja_matches != nullptr) {
+						   vector<JsonValue*>* out_ja_matches = new vector<JsonValue*>();
 						   if (ja_matches->empty()) {
 
-							  vector<JsonValue*>* out_ja_matches = new vector<JsonValue*>();
 
 							  for (auto& matchIter : tour.matches) {
 								 JsonValue* out_jv_match = new JsonValue();
@@ -285,8 +285,32 @@ class WebsocketHandler : public CivetWebSocketHandler {
 								 out_ja_matches->push_back(out_jv_match);
 							  }
 
-							  out_jo_tour->AddNameValuePairArray("matches", out_ja_matches);
 						   }
+						   else {
+							  for (auto& jv_match : *ja_matches) {
+								 unsigned int matchId = 0;
+								 for (auto& nvp_match : jv_match->m_data.u_jsonObject->m_nameValuePair) {
+									if (nvp_match->name._Equal("id")) {
+									   matchId = stoi(*nvp_match->jsonValue.m_data.u_number);
+									}
+								 }
+
+								 auto& match = tour.matches[matchId];
+
+								 JsonValue* out_jv_match = new JsonValue();
+								 out_jv_match->m_type = JsonValueTypeObject;
+
+								 JsonObject* out_jo_match = new JsonObject();
+
+								 match.generateJson(*out_jo_match);
+
+								 out_jv_match->m_data.u_jsonObject = out_jo_match;
+
+								 out_ja_matches->push_back(out_jv_match);
+							  }
+						   }
+						   out_jo_tour->AddNameValuePairArray("matches", out_ja_matches);
+
 						}
 
 						out_jv_tour->m_data.u_jsonObject = out_jo_tour;
@@ -322,6 +346,8 @@ class WebsocketHandler : public CivetWebSocketHandler {
 			JsonObject* out_jo_update = new JsonObject();
 
 			vector<JsonValue*>* out_ja_users = new vector<JsonValue*>();
+			vector<JsonValue*>* out_ja_tours = new vector<JsonValue*>();
+
 
 			for (auto& data : request->jsonValue.m_data.u_jsonObject->m_nameValuePair) {
 			   if (data->name._Equal("users")) {
@@ -356,6 +382,12 @@ class WebsocketHandler : public CivetWebSocketHandler {
 					 }
 					 if (teamIdSet) {
 						if (teamId == -1) {
+						   if (user->team != nullptr) {
+							  vector<User*>::iterator position = find(user->team->users.begin(), user->team->users.end(), user);
+							  if (position != user->team->users.end()) {
+								 user->team->users.erase(position);
+							  }
+						   }
 						   user->team = nullptr;
 						}
 						else {
@@ -376,6 +408,192 @@ class WebsocketHandler : public CivetWebSocketHandler {
 
 
 			   }
+			   else if (data->name._Equal("tours")) {
+				  auto* ja_tours = data->jsonValue.m_data.u_jsonArray;
+				  for (auto& jv_tour : *ja_tours) {
+					 JsonValue* out_jv_tour = new JsonValue();
+					 out_jv_tour->m_type = JsonValueTypeObject;
+					 JsonObject* out_jo_tour = new JsonObject();
+
+
+					 JsonObject* jo_tour = jv_tour->m_data.u_jsonObject;
+
+					 unsigned int id = 0;
+					 vector<JsonValue*>* ja_matches = nullptr;
+
+					 for (auto& nvp_tour : jo_tour->m_nameValuePair) {
+						if (nvp_tour->name._Equal("id")) {
+						   id = stoi(*nvp_tour->jsonValue.m_data.u_number);
+						}
+						else if (nvp_tour->name._Equal("matches")) {
+						   ja_matches = nvp_tour->jsonValue.m_data.u_jsonArray;
+						}
+					 }
+
+					 out_jo_tour->AddNameValuePairNumber("id", id);
+
+					 auto& tour = all_tours[id];
+
+
+
+					 if (ja_matches != nullptr) {
+						vector<JsonValue*>* out_ja_matches = new vector<JsonValue*>();
+
+						for (auto& jv_match : *ja_matches) {
+						   JsonValue* out_jv_match = new JsonValue();
+						   //JsonObject* out_jo_match = new JsonObject();
+						   out_jv_match->m_type = JsonValueTypeObject;
+						   //out_jv_match->m_data.u_jsonObject = out_jo_match;
+
+
+						   JsonObject* jo_match = jv_match->m_data.u_jsonObject;
+						   unsigned int match_id = 0;
+
+						   vector<JsonValue*>* ja_players_team_1_ids = nullptr;
+						   vector<JsonValue*>* ja_players_team_2_ids = nullptr;
+						   vector<JsonValue*>* actions = nullptr;
+
+						   for (auto& nvp_match : jo_match->m_nameValuePair) {
+							  if (nvp_match->name._Equal("id")) {
+								 match_id = stoi(*nvp_match->jsonValue.m_data.u_number);
+							  }
+							  else if (nvp_match->name._Equal("players-team-1-ids")) {
+								 ja_players_team_1_ids = nvp_match->jsonValue.m_data.u_jsonArray;
+							  }
+							  else if (nvp_match->name._Equal("players-team-2-ids")) {
+								 ja_players_team_2_ids = nvp_match->jsonValue.m_data.u_jsonArray;
+							  }
+							  else if (nvp_match->name._Equal("actions")) {
+								 actions = nvp_match->jsonValue.m_data.u_jsonArray;
+							  }
+						   }
+
+						   //out_jo_match->AddNameValuePairNumber("id", match_id);
+
+						   auto& match = tour->matches[match_id];
+
+						   if (ja_players_team_1_ids != nullptr) {
+							  match.playersTeam1.clear();
+
+							  //vector<JsonValue*>* out_ja_players_team_1_ids = new vector<JsonValue*>();
+
+
+							  for (auto& jv_id : *ja_players_team_1_ids) {
+								 unsigned int player_id = stoi(*jv_id->m_data.u_number);
+								 match.playersTeam1.push_back(all_users[player_id]);
+								 //JsonValue* out_jv_players_team_1_id = new JsonValue();
+								 //out_jv_players_team_1_id->m_type = JsonValueTypeNumber;
+								 //out_jv_players_team_1_id->m_data.u_number = new string(to_string(player_id));
+								 //out_ja_players_team_1_ids->push_back(out_jv_players_team_1_id);
+							  }
+							  //out_jo_match->AddNameValuePairArray("players-team-1-ids", out_ja_players_team_1_ids);
+						   }
+
+						   if (ja_players_team_2_ids != nullptr) {
+							  match.playersTeam2.clear();
+
+							  //vector<JsonValue*>* out_ja_players_team_2_ids = new vector<JsonValue*>();
+
+
+							  for (auto& jv_id : *ja_players_team_2_ids) {
+								 unsigned int player_id = stoi(*jv_id->m_data.u_number);
+								 match.playersTeam2.push_back(all_users[player_id]);
+								 //JsonValue* out_jv_players_team_2_id = new JsonValue();
+								 //out_jv_players_team_2_id->m_type = JsonValueTypeNumber;
+								 //out_jv_players_team_2_id->m_data.u_number = new string(to_string(player_id));
+								 //out_ja_players_team_2_ids->push_back(out_jv_players_team_2_id);
+							  }
+							  //out_jo_match->AddNameValuePairArray("players-team-2-ids", out_ja_players_team_2_ids);
+						   }
+
+						   if (actions != nullptr) {
+							  unsigned int sets_count = match.sets.size();
+							  auto& currentSet = match.sets[sets_count - 1];
+							  auto& team1Points = currentSet.team1Points;
+							  auto& team2Points = currentSet.team2Points;
+
+							  for (auto& jv_action : *actions) {
+								 auto& action = *jv_action->m_data.u_string;
+								 if (action._Equal("team-1-add-point")) {
+									if (match.team1SetPoints + match.team2SetPoints == match.numberOfSets) continue;
+
+									team1Points++;
+									if (team1Points >= 11 && team1Points >= team2Points + 2) {
+									   if (sets_count < match.numberOfSets) {
+										  match.sets.push_back(Set(sets_count));
+									   }
+									   match.team1SetPoints++;
+									}
+								 }
+								 else if (action._Equal("team-2-add-point")) {
+									if (match.team1SetPoints + match.team2SetPoints == match.numberOfSets) continue;
+
+									team2Points++;
+									if (team2Points >= 11 && team2Points >= team1Points + 2) {
+									   if (sets_count < match.numberOfSets) {
+										  match.sets.push_back(Set(sets_count));
+									   }
+									   match.team2SetPoints++;
+									}
+								 }
+								 else if (action._Equal("team-1-subtract-point")) {
+									if (match.team1SetPoints + match.team2SetPoints == match.numberOfSets) continue;
+
+									if (team1Points > 0) {
+									   team1Points--;
+									   if (team2Points >= 11 && team2Points >= team1Points + 2) {
+										  if (sets_count < match.numberOfSets) {
+											 match.sets.push_back(Set(sets_count));
+										  }
+										  match.team2SetPoints++;
+									   }
+									}
+
+								 }
+								 else if (action._Equal("team-2-subtract-point")) {
+									if (match.team1SetPoints + match.team2SetPoints == match.numberOfSets) continue;
+
+									if (team2Points > 0) {
+									   team2Points--;
+									   if (team1Points >= 11 && team1Points >= team2Points + 2) {
+										  if (sets_count < match.numberOfSets) {
+											 match.sets.push_back(Set(sets_count));
+										  }
+										  match.team1SetPoints++;
+									   }
+									}
+								 }
+								 else if (action._Equal("reset")) {
+									match.sets.clear();
+									match.sets.push_back(Set(0));
+								 }
+								 else if (action._Equal("swap-sides")) {
+									match.originalSide = !match.originalSide;
+								 }
+								 else if (action._Equal("swap-serve")) {
+									match.originalServe = !match.originalServe;
+								 }
+							  }
+						   }
+
+						   JsonObject* out_jo_match = new JsonObject();
+
+						   match.generateJson(*out_jo_match);
+
+						   out_jv_match->m_data.u_jsonObject = out_jo_match;
+
+
+						   out_ja_matches->push_back(out_jv_match);
+						}
+
+						out_jo_tour->AddNameValuePairArray("matches", out_ja_matches);
+					 }
+
+					 
+					 out_jv_tour->m_data.u_jsonObject = out_jo_tour;
+					 out_ja_tours->push_back(out_jv_tour);
+				  }
+			   }
 			}
 
 			if (!out_ja_users->empty())
@@ -383,7 +601,10 @@ class WebsocketHandler : public CivetWebSocketHandler {
 			else
 			   delete out_ja_users;
 			
-
+			if (!out_ja_tours->empty())
+			   out_jo_update->AddNameValuePairArray("tours", out_ja_tours);
+			else
+			   delete out_ja_tours;
 
 			out_jo_root.AddNameValuePairObject("update", out_jo_update);
 			string response;

@@ -22,34 +22,13 @@
   function setAudioName() {
     audioName = requiredAudio[recordAudioCounter];
     let text = "";
+    console.log(team_1_players_p.innerHTML);
     if (audioName == "player1") {
-      if (original_side) {
-        if (input_p1_name.value == "" || input_p1_name.value == "Player 1") {
-          text = "Player 1";
-        } else {
-          text = input_p1_name.value + " (Player 1)";
-        }
-      } else {
-        if (input_p2_name.value == "" || input_p2_name.value == "Player 1") {
-          text = "Player 1";
-        } else {
-          text = input_p2_name.value + " (Player 1)";
-        }
-      }
+      if(match.originalSide) text = team_1_players_p.innerHTML;
+      else text = team_2_players_p.innerHTML;
     } else if (audioName == "player2") {
-      if (original_side) {
-        if (input_p2_name.value == "" || input_p2_name.value == "Player 2") {
-          text = "Player 2";
-        } else {
-          text = input_p2_name.value + " (Player 2)";
-        }
-      } else {
-        if (input_p1_name.value == "" || input_p1_name.value == "Player 2") {
-          text = "Player 2";
-        } else {
-          text = input_p1_name.value + " (Player 2)";
-        }
-      }
+      if(match.originalSide) text = team_2_players_p.innerHTML;
+      else text = team_1_players_p.innerHTML;
     } else {
       text = audioName;
     }

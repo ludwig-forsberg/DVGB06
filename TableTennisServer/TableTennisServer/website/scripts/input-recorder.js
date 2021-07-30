@@ -36,7 +36,8 @@
         if (!trained) {
             popup.style.display = "flex";
             popup_header.innerHTML = "Say the following word:";
-            popup_text.innerHTML = input_p1_name.value;
+            if(match.originalSide) popup_text.innerHTML = team_1_players_p.innerHTML;
+            else popup_text.innerHTML = team_2_players_p.innerHTML;
         }
 
 
@@ -154,9 +155,11 @@
             else {
                 currentTrainingIndex = i;
                 if (i % 2 == 0) {
-                    popup_text.innerHTML = input_p1_name.value;
+                    if(match.originalSide) popup_text.innerHTML = team_1_players_p.innerHTML;
+                    else popup_text.innerHTML = team_2_players_p.innerHTML;
                 } else {
-                    popup_text.innerHTML = input_p2_name.value;
+                    if(match.originalSide) popup_text.innerHTML = team_2_players_p.innerHTML;
+                    else popup_text.innerHTML = team_1_players_p.innerHTML;
                 }
                 console.log("Good! say the next word loud and clear, and wait until we process it.  ===>  " + Recognize.dictionary[i % Recognize.dictionary.length]);
             }

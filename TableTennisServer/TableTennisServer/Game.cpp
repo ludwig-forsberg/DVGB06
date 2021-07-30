@@ -20,8 +20,8 @@ void Match::generateJson(JsonObject& jsonObject)
       playersTeam1Ids[i] = user->id;
       i++;
    }
-   free(playersTeam1Ids);
    jsonObject.AddNameValuePairArray("players-team-1-ids", playersTeam1Ids, playercountTeam1);
+   free(playersTeam1Ids);
 
    int playercountTeam2 = this->playersTeam2.size();
    int* playersTeam2Ids = (int*)malloc(playercountTeam2 * sizeof(int));
@@ -30,8 +30,8 @@ void Match::generateJson(JsonObject& jsonObject)
       playersTeam2Ids[i] = user->id;
       i++;
    }
-   free(playersTeam2Ids);
    jsonObject.AddNameValuePairArray("players-team-2-ids", playersTeam2Ids, playercountTeam2);
+   free(playersTeam2Ids);
 
    vector<JsonValue*>* sets = new vector<JsonValue*>();
 
@@ -143,4 +143,16 @@ Match::Match(unsigned int id) {
     this->matches[1] = Match(1);
     this->matches[2] = Match(2);
     this->matches[3] = Match(3);
+    this->matches[4] = Match(4);
+    this->matches[5] = Match(5);
+    this->matches[6] = Match(6);
+    this->matches[7] = Match(7);
+    this->matches[8] = Match(8);
+    this->matches[9] = Match(9);
+    this->matches[10] = Match(10);
+    this->matches[11] = Match(11);
+    this->matches[12] = Match(12);
+    this->matches[13] = Match(13);
+
+    this->matches[8].playersPerTeam = this->matches[9].playersPerTeam = 2;
  }

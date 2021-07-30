@@ -12,7 +12,7 @@ class Recognize {
     static calibMode = false;
     static mfccHistoryArr = [];
     static mfccHistoryCunters = [];
-    static dictionary = [()=>{p1_add_point();}, ()=>{p2_add_point()}];
+    static dictionary = [()=>{team1AddPoint();}, ()=>{team2AddPoint()}];
     static bufferSize = 2048;
     static _buffArrSize = 40;      // 40   / 70
     static _minNumberOfVariants = 2;

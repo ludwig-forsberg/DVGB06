@@ -184,6 +184,7 @@ class DropDownComponent extends HTMLElement{
         super();
         this.loaded = false;
         this._selectedIndex = -1;
+        this.ignoreOnSelectChange = false;
     }
 
     get selectedIndex (){
@@ -191,8 +192,14 @@ class DropDownComponent extends HTMLElement{
     }
 
     set selectedIndex(val){
+
+        let ignoreOnSelectChange = this.ignoreOnSelectChange || this._selectedIndex == val;
+
         this._selectedIndex = val;
         this.setAttribute("selected-index", ""+val);
+        if(!ignoreOnSelectChange && this.onSelectChange != undefined){
+            this.onSelectChange(this.selectedIndex);
+        }
         return this.val;
     }
 
@@ -217,7 +224,7 @@ class DropDownComponent extends HTMLElement{
             this.selectedIndex = index;
             this.div.classList.remove("open");
         };
-
+        return value;
     }
 
     addElement(value){
@@ -317,6 +324,9 @@ class DropDownComponent extends HTMLElement{
         });
 
         this.loaded = true;
+        if(this.onload != undefined){
+            this.onload();
+        }
     }
 
     static get observedAttributes(){
@@ -326,6 +336,11 @@ class DropDownComponent extends HTMLElement{
 		if (this.loaded && oldVal !== newVal) {
 			switch(attrName){
                 case "selected-index":
+                    if(this.selectedIndex != newVal){
+
+                        this.selectedIndex = newVal;
+                        
+                    }
                     for(let i = 0; i < this.values.length; i++){
                         this.values[i].classList.remove("selected");
                     }
@@ -334,9 +349,6 @@ class DropDownComponent extends HTMLElement{
                     else{
                         this.values[this.selectedIndex].classList.add("selected");
                         this.button.setAttribute("text", this.values[this.selectedIndex].innerHTML);
-                    }
-                    if(this.onSelectChange != undefined){
-                        this.onSelectChange(this.selectedIndex);
                     }
                     break;
                 case "placeholder":

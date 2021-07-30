@@ -396,9 +396,7 @@ window.addEventListener('load', (event) => {
                         header.innerHTML = method_data["name"];
                         connection.send(JSON.stringify({
                             "get": {
-                                "users":[],
-                                "teams":[],
-                                "tours":[]
+                                "users":[]
                             }
                         }));
                         break;
@@ -409,11 +407,21 @@ window.addEventListener('load', (event) => {
                                     for(let i = 0; i < data.length; i++){
                                         updateUser(data[i]);
                                     }
+                                    connection.send(JSON.stringify({
+                                        "get": {
+                                            "teams":[]
+                                        }
+                                    }));
                                     break;
                                 case "teams":
                                     for(let i = 0; i < data.length; i++){
                                         updateTeam(data[i]);
                                     }
+                                    connection.send(JSON.stringify({
+                                        "get": {
+                                            "tours":[]
+                                        }
+                                    }));
                                     break;
                                 case "tours":
                                     for(let i = 0; i < data.length; i++){

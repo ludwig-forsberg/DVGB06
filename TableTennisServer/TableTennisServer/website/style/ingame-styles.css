@@ -132,8 +132,19 @@ body{
         width: fit-content;
     }
 
+    .player-name{
+        text-align: center;
+        font-size: 4vh;
+    }
 
 
+    .serve-indicator{
+        height: 10vh;
+        width: 10vh;
+        margin: 1vh;
+        background: radial-gradient(white 50%, gray 75%);
+        border-radius: 50%;
+    }
 
 
     .score-container input{
@@ -228,10 +239,131 @@ body{
     rect{
         fill: white;
     }
+
+    
 }
 
 @media (max-width: 250px) {
-    .large-screen{
+    *{
+        color: white;
+    }
+
+    p{
+        color: white;
+        font-size: 10vw;
+        line-height: 10vw;
+    }
+
+    .score-container{
+        width: 50vw;
+        height: 100vw;
+        position: absolute;
+        top: 0;
+    }
+
+    .score-container.player2{
+        left: 50vw;
+    }
+
+    .red{
+        background: linear-gradient(0deg, #4e0000 0%, #a70000 50%, #c40000 51%, #8f0000 100%);
+    }
+
+    .blue{
+        background: linear-gradient(0deg, #00004e 0%, #0000a7 50%, #0000c4 51%, #00008f 100%);
+    }
+
+    #action_buttons{
+        display: none;
+    }
+    #score_controller_buttons button{
+        width: 50vw;
+        height: 50vw;
+        position: absolute;
+        background: #0000;
+        border-width: 0;
+        font-size: 10vw;
+    }
+
+    #p1_add_point{
+        left: 0;
+        top: 0;
+    }
+
+    #p2_add_point{
+        left: 50vw;
+        top: 0;
+    }
+
+    #p1_sub_point{
+        left: 0;
+        top: 50vw;
+    }
+
+    #p2_sub_point{
+        left: 50vw;
+        top: 50vw;
+    }
+
+    .points{
+        width: 50vw;
+        height: 20vw;
+        position: absolute;
+        top: 40vw;
+        font-size: 20vw;
+        text-align: center;
+        line-height: 20vw;
+    }
+
+    .set{
+        position: absolute;
+        width: 10vw;
+        height: 10vw;
+        font-size: 10vw;
+        line-height: 10vw;
+        top: 5vw;
+        text-align: center;
+    }
+
+    .set.player1{
+        left: 35vw;
+    }
+
+    .set.player2{
+        right: 35vw;
+    }
+
+    .serve-indicator{
+        position: absolute;
+        width: 10vw;
+        height: 10vw;
+        font-size: 10vw;
+        line-height: 10vw;
+        top: 85vw;
+        text-align: center;
+        background: radial-gradient(white 50%, gray 75%);
+        border-radius: 50%;
+    }
+
+    .serve-indicator.player1{
+        left: 35vw;
+    }
+
+    .serve-indicator.player2{
+        right: 35vw;
+    }
+
+    .player-name{
+        position: absolute;
+        width: 50vw;
+        height: 5vw;
+        font-size: 5vw;
+        line-height: 5vw;
+        top: 62.5vw;
+        text-align: center;
+    }
+
+    /*.large-screen{
         display: none;
     }
     .small-screen{
@@ -298,9 +430,6 @@ body{
     .points{
         font-size: 20vw;
         line-height: 20vw;
-        /*top: 40vw;*/
-        
-        
     }
 
 
@@ -357,5 +486,5 @@ body{
         padding: 0;
         display: block;
         opacity: 0;
-    }
+    }*/
 }

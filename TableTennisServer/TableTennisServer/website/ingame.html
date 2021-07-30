@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="icon" type="image/png" href="./favicon.png"/>
     <link rel="stylesheet" href="./style/ingame-styles.css">
     <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Orbitron" />
     <script src="./scripts/ingame-script.js"></script>
@@ -15,53 +16,56 @@
     <script src="./scripts/qrcode2.js"></script>
 </head>
 <body>
-    <div class="large-screen">
-        <div class="row">
-            <div id="score_container_p1" class="column score-container player1 red">
-                <div class="row">
-                    <p id="text_p1_points" class="points player1">0</p>
-                    <div>
-                        <p id="text_p1_set" class="set player1">0</p>
-                        <canvas width="200" height="100" id="canvas_p1_serve"></canvas>
-                    </div>
+    <div class="row">
+        <div id="score_container_p1" class="column score-container player1 red">
+            <div class="row">
+                <p id="text_p1_points" class="points player1">0</p>
+                <div>
+                    <p id="text_p1_set" class="set player1">0</p>
+                    <div id="p1_serve_indicator" class="serve-indicator player1"></div>
                 </div>
-                <input id="input_p1_name" placeholder="Player 1">
             </div>
-            <div id="score_container_p2" class="column score-container player2 blue">
-                <div class="row">
-                    <div>
-                        <p id="text_p2_set" class="set player2">0</p>
-                        <canvas width="200" height="100" id="canvas_p2_serve"></canvas>
-                    </div>
-                    <p id="text_p2_points" class="points player2">0</p>
+            <p id="team_1_players_p" class="player-name"></p>
+        </div>
+        <div id="score_container_p2" class="column score-container player2 blue">
+            <div class="row">
+                <div>
+                    <p id="text_p2_set" class="set player2">0</p>
+                    <div id="p2_serve_indicator" class="serve-indicator player2"></div>
                 </div>
-                <input id="input_p2_name" placeholder="Player 2">
+                <p id="text_p2_points" class="points player2">0</p>
+            </div>
+            <p id="team_2_players_p" class="player-name"></p>
+        </div>
+    </div>
+
+    <div id="score_controller_buttons" style="display: none;">
+
+        <div class="row">
+            <div class="column">
+                <button id="p1_add_point">+</button>
+            </div>
+            <div class="column">
+                <button id="p1_sub_point">-</button>
+            </div>
+            <div class="column">
+                <button id="p2_add_point">+</button>
+            </div>
+            <div class="column">
+                <button id="p2_sub_point">-</button>
             </div>
         </div>
-    
+    </div>
+    <div id="action_buttons" style="display: none;">
         <div class="row">
             <div class="column">
-                <button onclick="p1_add_point()">+</button>
+                <button id="reset">Reset</button>
             </div>
             <div class="column">
-                <button onclick="p1_sub_point()">-</button>
+                <button id="swap_sides">Swap sides</button>
             </div>
             <div class="column">
-                <button onclick="p2_add_point()">+</button>
-            </div>
-            <div class="column">
-                <button onclick="p2_sub_point()">-</button>
-            </div>
-        </div>
-        <div class="row">
-            <div class="column">
-                <button onclick="reset()">Reset</button>
-            </div>
-            <div class="column">
-                <button onclick="swap_sides()">Swap sides</button>
-            </div>
-            <div class="column">
-                <button onclick="swap_serve()">Swap serve</button>
+                <button id="swap_serve">Swap serve</button>
             </div>
         </div>
         <div class="row">
@@ -98,46 +102,16 @@
                 <button id="record_output_audio_button">Record Audio For Speaker</button>
             </div>
         </div>
-        <svg id="qrcode">
+    </div>
+        <!--<svg id="qrcode">
             <script>
                 new QRCode(document.getElementById("qrcode"), window.location.href);
             </script>
             
-        </svg>
+        </svg>-->
 
           
         
-    </div>
-    <div class="small-screen">
-        <div id="small_screen_p1_score_container" class="left red">
-            <p id="small_screen_p1_set" class="set">0</p>
-            <div class="points-container">
-                <p>+</p>
-                <p id="small_screen_p1_points" class="points">0</p>
-                <p>-</p>
-            </div>
-            <p id="small_screen_p1_name" class="player-name">Player 1</p>
-            <div id="small_screen_p1_serve" class="serve-indicator"></div>
-            <div class="button-container">
-                <button onclick="p1_add_point()"></button>
-                <button onclick="p1_sub_point()"></button>
-            </div>
-        </div>
-        <div id="small_screen_p2_score_container" class="right blue">
-            <p id="small_screen_p2_set" class="set">0</p>
-            <div class="points-container">
-                <p>+</p>
-                <p id="small_screen_p2_points" class="points">0</p>
-                <p>-</p>
-            </div>
-            <p id="small_screen_p2_name" class="player-name">Player 2</p>
-            <div id="small_screen_p2_serve" class="serve-indicator"></div>
-            <div class="button-container">
-                <button onclick="p2_add_point()"></button>
-                <button onclick="p2_sub_point()"></button>
-            </div>
-        </div>
-        <div class="circle"></div>
-    </div>
+
 </body>
 </html>

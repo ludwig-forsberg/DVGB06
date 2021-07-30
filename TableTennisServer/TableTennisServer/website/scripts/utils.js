@@ -94,7 +94,7 @@ class Utils {
         a.target = '_blank';
         a.innerHTML = 'Open Recorded Audio';
         a.href = URL.createObjectURL(blob);
-        document.getElementById('audios-container').innerHTML = a;
+        //document.getElementById('audios-container').innerHTML = a;
     };
 
 }

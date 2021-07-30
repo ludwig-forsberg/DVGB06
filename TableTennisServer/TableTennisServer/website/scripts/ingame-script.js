@@ -1,410 +1,541 @@
-var p1_points = 0;
-var p1_set = 0;
-var p2_points = 0;
-var p2_set = 0;
+const urlParams = new URLSearchParams(window.location.search);
 
-var original_side = true;
-var original_serve = true;
+tour = {};
+match = {};
 
-var text_p1_points;
-var text_p1_set;
-var score_container_p1;
-var input_p1_name;
-var canvas_p1_serve;
-var text_p2_points;
-var text_p2_set;
-var score_container_p2;
-var input_p2_name;
-var canvas_p2_serve;
-
-var speaker_toggle;
-var use_recorded_audio_toggle;
-var popup;
-var popup_container;
-var popup_header;
-var popup_text;
+match.originalSide = true;
+match.originalServe = true;
+match.team1SetPoints = 0;
+match.team2SetPoints = 0;
+match.team1Points = 0;
+match.team2Points = 0;
+match.players_team_1_string = "";
+match.players_team_2_string = "";
 
 
-var small_screen_p1_score_container;
-var small_screen_p1_set;
-var small_screen_p1_points;
-var small_screen_p1_name;
-var small_screen_p1_serve;
-var small_screen_p2_score_container;
-var small_screen_p2_set;
-var small_screen_p2_points;
-var small_screen_p2_name;
-var small_screen_p2_serve;
+tour.id = urlParams.get("tourid");
+match.id = urlParams.get("matchid");
+let isOwner = false;
+if (tour.id == null || tour.id == "" || match.id == null || match.id == "") {
+    window.location = ".";
+} else {
+    users = {};
 
-var span_console;
-
-var connection;
-var p1_serve = true;
-
-var recordedAudio={};
-var requiredAudio=[
-  "player1",
-  "player2",
-  "serves",
-  "setpoint",
-  "0",
-  "1",
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "10",
-  "11"
-];
-
-function setServeUI(){
-    p1_serve = true;
-
-    if((original_serve && !original_side) || (!original_serve && original_side))
-        p1_serve = !p1_serve;
-    
-    if((p1_set+p2_set)%2 == 1)
-        p1_serve = !p1_serve;
-    
-
-    if(p1_points >= 10 && p2_points >= 10){
-        if((p1_points+p2_points)%2 >= 1)
-            p1_serve = !p1_serve;
+    function updateUser(user_data) {
+        let temp = users[user_data["id"]];
+        let teamId = user_data["team-id"];
+        let user = (temp == undefined ? function () {
+            let newUser = {};
+            newUser.id = user_data["id"];
+            users[newUser.id] = newUser;
+            return newUser;
+        }() : temp);
+        user.name = user_data["name"];
+        user.teamId = user_data["team-id"];
     }
-    else{
-        if(((p1_points+p2_points)/2)%2 >= 1)
-            p1_serve = !p1_serve;
 
+    function updateTour(tour_data) {
+        let tourId = tour_data["id"];
+        if (tourId == tour.id) {
+
+            if (tour_data["owner-id"] != undefined) {
+                tour.ownerId = tour_data["owner-id"];
+                let id = sessionStorage.getItem('id');
+                if (id != null && tour.ownerId == id) {
+                    isOwner = true;
+                }
+                setActionUI();
+            }
+
+            if (tour_data["name"] != undefined) {
+                tour.name = tour_data["name"];
+            }
+
+            if (tour_data["home-id"] != undefined) {
+                tour.homeId = tour_data["home-id"];
+            }
+
+            if (tour_data["away-id"] != undefined) {
+                tour.awayId = tour_data["away-id"];
+            }
+
+
+            if (tour_data["matches"] != undefined) {
+                for (let i = 0; i < tour_data["matches"].length; i++) {
+                    let match_data = tour_data["matches"][i];
+                    let matchId = match_data["id"];
+
+                    if (matchId == match.id) {
+
+                        if (match_data["original-side"] != undefined) match.originalSide = match_data["original-side"];
+                        if (match_data["original-serve"] != undefined) match.originalServe = match_data["original-serve"];
+
+                        if (match_data["team-1-set-points"] != undefined) match.team1SetPoints = match_data["team-1-set-points"];
+                        if (match_data["team-2-set-points"] != undefined) match.team2SetPoints = match_data["team-2-set-points"];
+
+                        if (match_data["sets"] != undefined) {
+                            let sets = match_data["sets"];
+                            match.team1Points = sets[sets.length - 1]["team-1-points"];
+                            match.team2Points = sets[sets.length - 1]["team-2-points"];
+                        }
+
+
+
+                        if (match_data["players-team-1-ids"] != undefined) {
+                            let players_team_1_string = "";
+                            for (let u = 0; u < match_data["players-team-1-ids"].length; u++) {
+                                if (players_team_1_string != "") players_team_1_string += "/";
+                                players_team_1_string += " " + users[match_data["players-team-1-ids"][u]].name + " "
+                            }
+                            match.players_team_1_string = players_team_1_string;
+                        }
+
+
+                        if (match_data["players-team-2-ids"] != undefined) {
+                            let players_team_2_string = "";
+                            for (let u = 0; u < match_data["players-team-2-ids"].length; u++) {
+                                if (players_team_2_string != "") players_team_2_string += "/";
+                                players_team_2_string += " " + users[match_data["players-team-2-ids"][u]].name + " "
+                            }
+                            match.players_team_2_string = players_team_2_string;
+                        }
+                    }
+                }
+                updateUI();
+            }
+        }
     }
-    
 
-    if(p1_serve){
-        canvas_p1_serve.style.visibility = "Visible";
-        canvas_p2_serve.style.visibility = "Hidden";
+    window.addEventListener('load', (event) => {
+        var wsproto = (location.protocol === 'https:') ? 'wss:' : 'ws:';
+        connection = new WebSocket(wsproto + '//' + window.location.host + '/websocket');
 
-        small_screen_p1_serve.style.visibility = "Visible";
-        small_screen_p2_serve.style.visibility = "Hidden";
-    }else{
-        canvas_p1_serve.style.visibility = "Hidden";
-        canvas_p2_serve.style.visibility = "Visible";
+        let userId = sessionStorage.getItem('id');
+        let userName = sessionStorage.getItem('name');
+        let authenticated = userId != null;
+        if (authenticated) {
+            userId = parseInt(userId);
+        }
 
-        small_screen_p1_serve.style.visibility = "Hidden";
-        small_screen_p2_serve.style.visibility = "Visible";
+        connection.onmessage = function (e) {
+            if (e.data != "") {
+                let json = JSON.parse(e.data);
+                console.log(json);
+                for (const [method, method_data] of Object.entries(json)) {
+                    switch (method) {
+                        case "auth":
+                            sessionStorage.setItem('id', method_data["id"]);
+                            sessionStorage.setItem('name', method_data["name"]);
+                            connection.send(JSON.stringify({
+                                "get": {
+                                    "users": []
+                                }
+                            }));
+                            break;
+                        case "get":
+                            for (const [data_type, data] of Object.entries(method_data)) {
+                                switch (data_type) {
+                                    case "users":
+                                        for (let i = 0; i < data.length; i++) {
+                                            updateUser(data[i]);
+                                        }
+                                        connection.send(JSON.stringify({
+                                            "get": {
+                                                "tours": [{
+                                                    "id": tour.id,
+                                                    "matches": [{
+                                                        "id": match.id
+                                                    }]
+                                                }]
+                                            }
+                                        }));
+                                        break;
+                                    case "teams":
+                                        break;
+                                    case "tours":
+                                        for (let i = 0; i < data.length; i++) {
+                                            updateTour(data[i]);
+                                        }
+                                        break;
+                                }
+                            }
+                            break;
+                        case "update":
+                            for (const [data_type, data] of Object.entries(method_data)) {
+                                switch (data_type) {
+                                    case "users":
+                                        for (let i = 0; i < data.length; i++) {
+                                        }
+                                        break;
+                                    case "teams":
+                                        for (let i = 0; i < data.length; i++) {
+                                        }
+                                        break;
+                                    case "tours":
+                                        for (let i = 0; i < data.length; i++) {
+                                            updateTour(data[i]);
+                                        }
+                                        break;
+                                }
+                            }
+                            break;
+                        case "create":
+                            for (const [data_type, data] of Object.entries(method_data)) {
+                                switch (data_type) {
+                                    case "teams":
+                                        for (let i = 0; i < data.length; i++) {
+                                        }
+                                        break;
+                                    case "tours":
+                                        for (let i = 0; i < data.length; i++) {
+                                        }
+                                        break;
+                                }
+                            }
+                            break;
+                        case "delete":
+                            for (const [data_type, data] of Object.entries(method_data)) {
+                                switch (data_type) {
+                                    case "teams":
+                                        for (let i = 0; i < data.length; i++) {
+                                        }
+                                        break;
+                                    case "tours":
+                                        for (let i = 0; i < data.length; i++) {
+                                        }
+                                        break;
+                                }
+                            }
+                            break;
+                    }
+                }
+            }
+        }
+        connection.onerror = function (error) {
+            console.error(error);
+            connection.close();
+        }
+
+        connection.onopen = function (e) {
+            if (authenticated) {
+                connection.send(JSON.stringify({
+                    "auth": {
+                        "id": userId,
+                        "name": userName
+                    }
+                }));
+            }
+        }
+
+        if (!authenticated)
+            setActionUI();
+    });
+}
+
+function team1AddPoint() {
+    connection.send(JSON.stringify({
+        "update": {
+            "tours": [{
+                "id": tour.id,
+                "matches": [{
+                    "id": match.id,
+                    "actions": ["team-1-add-point"]
+                }]
+            }]
+        }
+    }));
+}
+
+function team1SubtractPoint() {
+    connection.send(JSON.stringify({
+        "update": {
+            "tours": [{
+                "id": tour.id,
+                "matches": [{
+                    "id": match.id,
+                    "actions": ["team-1-subtract-point"]
+                }]
+            }]
+        }
+    }));
+}
+
+function team2AddPoint() {
+    connection.send(JSON.stringify({
+        "update": {
+            "tours": [{
+                "id": tour.id,
+                "matches": [{
+                    "id": match.id,
+                    "actions": ["team-2-add-point"]
+                }]
+            }]
+        }
+    }));
+}
+
+function team2SubtractPoint() {
+    connection.send(JSON.stringify({
+        "update": {
+            "tours": [{
+                "id": tour.id,
+                "matches": [{
+                    "id": match.id,
+                    "actions": ["team-2-subtract-point"]
+                }]
+            }]
+        }
+    }));
+}
+
+var actionUIisSet = false;
+function setActionUI() {
+    if (actionUIisSet)
+        return;
+    actionUIisSet = true;
+    if (isOwner) {
+
+
+
+
+        p1_add_point.onclick = () => {
+            if (match.originalSide)
+                team1AddPoint();
+            else
+                team2AddPoint();
+        };
+
+        p1_sub_point.onclick = () => {
+            if (match.originalSide)
+                team1SubtractPoint();
+            else
+                team2SubtractPoint();
+        };
+
+        p2_add_point.onclick = () => {
+            if (match.originalSide)
+                team2AddPoint();
+            else
+                team1AddPoint();
+        };
+
+        p2_sub_point.onclick = () => {
+            if (match.originalSide)
+                team2SubtractPoint();
+            else
+                team1SubtractPoint();
+        };
+
+        reset.onclick = () => {
+            connection.send(JSON.stringify({
+                "update": {
+                    "tours": [{
+                        "id": tour.id,
+                        "matches": [{
+                            "id": match.id,
+                            "actions": ["reset"]
+                        }]
+                    }]
+                }
+            }));
+        };
+
+        swap_sides.onclick = () => {
+            connection.send(JSON.stringify({
+                "update": {
+                    "tours": [{
+                        "id": tour.id,
+                        "matches": [{
+                            "id": match.id,
+                            "actions": ["swap-sides"]
+                        }]
+                    }]
+                }
+            }));
+        };
+
+        swap_serve.onclick = () => {
+            connection.send(JSON.stringify({
+                "update": {
+                    "tours": [{
+                        "id": tour.id,
+                        "matches": [{
+                            "id": match.id,
+                            "actions": ["swap-serve"]
+                        }]
+                    }]
+                }
+            }));
+        };
+        action_buttons.style.display = "";
+        score_controller_buttons.style.display = "";
+    } else {
+        action_buttons.remove();
+        score_controller_buttons.remove();
     }
 }
 
-
-function setUI(){
-    small_screen_p1_points.innerHTML = text_p1_points.innerHTML = "" + p1_points;
-    small_screen_p1_set.innerHTML = text_p1_set.innerHTML = "" + p1_set;
-    small_screen_p2_points.innerHTML = text_p2_points.innerHTML = "" + p2_points;
-    small_screen_p2_set.innerHTML = text_p2_set.innerHTML = "" + p2_set;
-    setServeUI();
-
-    if(original_side){
-        score_container_p1.classList.remove("blue")
+function updateUI() {
+    if (match.originalSide) {
+        text_p1_set.innerHTML = match.team1SetPoints;
+        text_p2_set.innerHTML = match.team2SetPoints;
+        text_p1_points.innerHTML = match.team1Points;
+        text_p2_points.innerHTML = match.team2Points;
+        score_container_p1.classList.remove("blue");
         score_container_p1.classList.add("red");
-        score_container_p2.classList.remove("red")
+        score_container_p2.classList.remove("red");
         score_container_p2.classList.add("blue");
-
-        small_screen_p1_score_container.classList.remove("blue")
-        small_screen_p1_score_container.classList.add("red");
-        small_screen_p2_score_container.classList.remove("red")
-        small_screen_p2_score_container.classList.add("blue");
-    }else{
-        score_container_p1.classList.remove("red")
-        score_container_p1.classList.add("blue");
-        score_container_p2.classList.remove("blue")
+    } else {
+        text_p1_set.innerHTML = match.team2SetPoints;
+        text_p2_set.innerHTML = match.team1SetPoints;
+        text_p1_points.innerHTML = match.team2Points;
+        text_p2_points.innerHTML = match.team1Points;
+        score_container_p2.classList.remove("blue");
         score_container_p2.classList.add("red");
-
-        small_screen_p1_score_container.classList.remove("red")
-        small_screen_p1_score_container.classList.add("blue");
-        small_screen_p2_score_container.classList.remove("blue")
-        small_screen_p2_score_container.classList.add("red");
+        score_container_p1.classList.remove("red");
+        score_container_p1.classList.add("blue");
     }
 
-    if(speaker_toggle.checked){
-        if(use_recorded_audio_toggle.checked){
+    let p1_serves = true;
+
+    if (!match.originalSide) p1_serves = !p1_serves;
+    if (!match.originalServe) p1_serves = !p1_serves;
+    if (Math.floor((match.team1Points + match.team2Points) / 2) % 2 == 1) p1_serves = !p1_serves;
+    if ((match.team1SetPoints + match.team2SetPoints) % 2 == 1) p1_serves = !p1_serves;
+
+
+    if (p1_serves) {
+        p1_serve_indicator.style.visibility = "";
+        p2_serve_indicator.style.visibility = "hidden";
+    } else {
+        p2_serve_indicator.style.visibility = "";
+        p1_serve_indicator.style.visibility = "hidden";
+    }
+
+    setPlayerNames(match.players_team_1_string, true);
+    setPlayerNames(match.players_team_2_string, false);
+
+    if (speaker_toggle.checked) {
+        if (use_recorded_audio_toggle.checked) {
             var audioList = [];
 
-            function addAudioToList(str){
+            function addAudioToList(str) {
                 let audio = recordedAudio[str];
-                if(audio == undefined){
+                if (audio == undefined) {
                     console.log("Audio not found: ", str);
-                }else{
+                } else {
                     audioList.push(audio);
                 }
+                console.log(audio)
             }
 
-            if((p1_serve && original_side) || (!p1_serve && !original_side)){
-                if(original_side){
-                    addAudioToList("" + p1_points);
-                    addAudioToList("" + p2_points);
-                }else{
-                    addAudioToList("" + p2_points);
-                    addAudioToList("" + p1_points);
+
+            if ((p1_serves && match.originalSide) || (!p1_serves && !match.originalSide)) {
+                if (match.team1Points <= 11 && match.team2Points <= 11) {
+                    if (match.originalSide) {
+                        addAudioToList("" + match.team1Points);
+                        addAudioToList("" + match.team2Points);
+                    } else {
+                        addAudioToList("" + match.team2Points);
+                        addAudioToList("" + match.team1Points);
+                    }
                 }
                 addAudioToList("player1");
-            }else{
-                if(original_side){
-                    addAudioToList("" + p2_points);
-                    addAudioToList("" + p1_points);
-                }else{
-                    addAudioToList("" + p1_points);
-                    addAudioToList("" + p2_points);
+            } else {
+                if (match.team1Points <= 11 && match.team2Points <= 11) {
+                    if (match.originalSide) {
+                        addAudioToList("" + match.team2Points);
+                        addAudioToList("" + match.team1Points);
+                    } else {
+                        addAudioToList("" + match.team1Points);
+                        addAudioToList("" + match.team2Points);
+                    }
                 }
                 addAudioToList("player2");
             }
             addAudioToList("serves");
-            if((p1_points >= 10 || p2_points >= 10) && p1_points != p2_points)
+            if ((match.team1Points >= 10 || match.team2Points >= 10) && match.team1Points != match.team2Points)
                 addAudioToList("setpoint");
 
-            function playAudio(){
+            function playAudio() {
                 let audio = audioList.shift();
-                audio.play();
-                if(audioList.length > 0)
-                {
-                    audio.onended = ()=>{
+                if (audio != undefined)
+                    audio.play();
+                if (audioList.length > 0) {
+                    audio.onended = () => {
                         playAudio();
                     }
                 }
             }
-            playAudio();
-        }else{
-            var audio_message_string = "";
+            if (audioList.length > 0)
+                playAudio();
+        } else {
+            messageParts = [];
 
-            let name = "";
-    
-            if(p1_serve){
-                name = (input_p1_name.value==""?input_p1_name.placeholder:input_p1_name.value);
-                audio_message_string += p1_points + " " + p2_points;
-            }else{
-                name = (input_p2_name.value==""?input_p2_name.placeholder:input_p2_name.value);
-                audio_message_string += p2_points + " " + p1_points;
-    
+            if (p1_serves) {
+                messageParts.push(match.team1Points + " " + match.team2Points);
+                messageParts.push(team_1_players_p.innerHTML.replaceAll("/", "and") + " serves");
+            } else {
+                messageParts.push(match.team2Points + " " + match.team1Points);
+                messageParts.push(team_2_players_p.innerHTML.replaceAll("/", "and") + " serves");
+
             }
-    
-            audio_message_string += name + " serves";
-    
-            if((p1_points >= 10 || p2_points >= 10) && p1_points != p2_points)
-                audio_message_string += "setpoint";
-    
-            var audio_message = new SpeechSynthesisUtterance(audio_message_string);
-            window.speechSynthesis.speak(audio_message);
+
+            if ((match.team1Points >= 10 || match.team2Points >= 10) && match.team1Points != match.team2Points)
+                messageParts.push("setpoint");
+
+            messageParts = messageParts.join(". ");
+
+            const speak = (textToSpeak) => {
+                const msg = new SpeechSynthesisUtterance();
+                const voices = window.speechSynthesis.getVoices();
+                msg.voice = voices[0];
+                msg.volume = 1; // 0 to 1
+                msg.rate = 1.5; // 0.1 to 10
+                msg.pitch = .15; // 0 to 2
+                msg.text = textToSpeak;
+                msg.lang = 'en-US';
+
+                speechSynthesis.speak(msg);
+            }
+            speak(messageParts);
+
         }
     }
 }
 
-function reset(){
-    p1_points = p1_set = p2_points = p2_set = 0;
-    setUI();
-    sendData();
-}
-
-function p1_add_point(){
-    p1_points++;
-    if(p1_points >= 11 && (p1_points - p2_points) >= 2){
-        p1_points = p2_points = 0;
-        p1_set++;
-    }
-    setUI();
-    sendData();
-}
-
-
-function p2_add_point(){
-    p2_points++;
-    if(p2_points >= 11 && (p2_points - p1_points) >= 2){
-        p2_points = p1_points = 0;
-        p2_set++;
-    }
-    setUI();
-    sendData();
-}
-
-function p1_sub_point(){
-    p1_points--;
-    if(p1_points < 0)
-        p1_points = 0;
-    if(p2_points >= 11 && (p2_points - p1_points) >= 2){
-        p2_points = p1_points = 0;
-        p2_set++;
-    }
-    setUI();
-    sendData();
-}
-
-
-function p2_sub_point(){
-    p2_points--;
-    if(p2_points < 0)
-        p2_points = 0;
-    if(p1_points >= 11 && (p1_points - p2_points) >= 2){
-        p1_points = p2_points = 0;
-        p1_set++;
-    }
-    setUI();
-    sendData();
-}
-
-function swap_serve(){
-    original_serve = !original_serve;
-    setServeUI();
-    sendData();
-}
-
-function swap_sides(){
-    original_side = !original_side;
-
-    let temp = input_p1_name.value;
-    input_p1_name.value = input_p2_name.value;
-    input_p2_name.value = temp;
-
-
-    temp = input_p1_name.placeholder;
-    input_p1_name.placeholder = input_p2_name.placeholder;
-    input_p2_name.placeholder = temp;
-
-
-
-    temp = p1_points;
-    p1_points = p2_points;
-    p2_points = temp;
-
-    temp = p1_set;
-    p1_set = p2_set;
-    p2_set = temp;
-
-
-    
-    setUI();
-    sendData();
-}
-
-function drawServeIndicator(canvas){
-    let ctx = canvas.getContext("2d");
-
-    var x = 100,
-    y = 50,
-    innerRadius = 30,
-    outerRadius = 44,
-    // Radius of the entire circle.
-    radius = 44;
-
-    ctx.beginPath();
-    ctx.globalAlpha = .5;
-    ctx.arc(x, y+5, radius, 0, 2 * Math.PI);
-    ctx.fillStyle = "black";
-    ctx.fill();
-
-    ctx.globalAlpha = 1;
-    let gradient = ctx.createRadialGradient(x, y, innerRadius, x, y, outerRadius);
-    gradient.addColorStop(0, 'white');
-    gradient.addColorStop(1, 'gray');
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, 2 * Math.PI);
-
-    ctx.fillStyle = gradient;
-    ctx.fill();
-
-    
-}
-var original_side = true;
-var original_serve = true;
-function sendData(){
-    connection.send(JSON.stringify({
-        "player1":{
-            "name": (input_p1_name.value==""?input_p1_name.placeholder:input_p1_name.value),
-            "points": p1_points,
-            "set": p1_set
-        },
-        "player2":{
-            "name": (input_p2_name.value==""?input_p2_name.placeholder:input_p2_name.value),
-            "points": p2_points,
-            "set": p2_set
-        },
-        "original_side": original_side,
-        "original_serve": original_serve,
-        "screen_height": window.screen.height,
-        "screen_width": window.screen.width
-    }));
-
-}
-
-window.onload = ()=>{
-    text_p1_points = document.getElementById("text_p1_points");
-    text_p1_set = document.getElementById("text_p1_set");
-    score_container_p1 = document.getElementById("score_container_p1");
-    input_p1_name = document.getElementById("input_p1_name");
-    canvas_p1_serve = document.getElementById("canvas_p1_serve");
-    text_p2_points = document.getElementById("text_p2_points");
-    text_p2_set = document.getElementById("text_p2_set");
-    score_container_p2 = document.getElementById("score_container_p2");
-    input_p2_name = document.getElementById("input_p2_name");
-    canvas_p2_serve = document.getElementById("canvas_p2_serve");
-    span_console = document.getElementById("span_console");
-    drawServeIndicator(canvas_p1_serve);
-    drawServeIndicator(canvas_p2_serve);
-    
-    speaker_toggle = document.getElementById("speaker_toggle");
-    use_recorded_audio_toggle = document.getElementById("use_recorded_audio_toggle");
-    popup = document.getElementById("popup");
-    popup_container = document.getElementById("popup_container");
-    popup_header = document.getElementById("popup_header");
-    popup_text = document.getElementById("popup_text");
-
-    small_screen_p1_score_container     = document.getElementById("small_screen_p1_score_container");
-    small_screen_p1_set                 = document.getElementById("small_screen_p1_set");
-    small_screen_p1_points              = document.getElementById("small_screen_p1_points");
-    small_screen_p1_name                = document.getElementById("small_screen_p1_name");
-    small_screen_p1_serve               = document.getElementById("small_screen_p1_serve");
-    small_screen_p2_score_container     = document.getElementById("small_screen_p2_score_container");
-    small_screen_p2_set                 = document.getElementById("small_screen_p2_set");
-    small_screen_p2_points              = document.getElementById("small_screen_p2_points");
-    small_screen_p2_name                = document.getElementById("small_screen_p2_name");
-    small_screen_p2_serve               = document.getElementById("small_screen_p2_serve");
-
-
-    var wsproto = (location.protocol === 'https:') ? 'wss:' : 'ws:';
-    connection = new WebSocket(wsproto + '//' + window.location.host + '/websocket');
-    //connection.send(i);
-
-    connection.onmessage = function(e){
-        if(e.data != ""){
-            let data = JSON.parse(e.data);
-
-            input_p1_name.value = data.player1.name;
-            p1_points = data.player1.points;
-            p1_set = data.player1.set;
-
-            input_p2_name.value = data.player2.name;
-            p2_points = data.player2.points;
-            p2_set = data.player2.set;
-
-            small_screen_p1_name.innerHTML = data.player1.name;
-            small_screen_p2_name.innerHTML = data.player2.name;
-    
-
-            original_side = data.original_side;
-            original_serve = data.original_serve;
-
-            setUI();
+function setPlayerNames(value, team1) {
+    if (team1) {
+        if (match.originalSide) {
+            team_1_players_p.innerHTML = (value == "" ? "Team 1" : value);
+        } else {
+            team_2_players_p.innerHTML = (value == "" ? "Team 1" : value);
+        }
+    } else {
+        if (match.originalSide) {
+            team_2_players_p.innerHTML = (value == "" ? "Team 2" : value);
+        } else {
+            team_1_players_p.innerHTML = (value == "" ? "Team 2" : value);
         }
     }
-    connection.onerror = function(error){
-        console.error(error);
-        connection.close();
-    }
-
-    input_p1_name.addEventListener('input', (event) => {
-        sendData();
-    });
-
-    input_p2_name.addEventListener('input', (event) => {
-        sendData();
-    });
 }
+
+var recordedAudio = {};
+var requiredAudio = [
+    "player1",
+    "player2",
+    "serves",
+    "setpoint",
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11"
+];
