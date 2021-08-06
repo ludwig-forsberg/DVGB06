@@ -366,8 +366,6 @@ if(tour.id == null || tour.id == ""){
                         return newMatch;
                     }() : temp);
 
-                    
-
                     if(match_data["sets"] != undefined){
                         for(let u = 0; u < match_data["sets"].length; u++){
                             let set = match_data["sets"][u];

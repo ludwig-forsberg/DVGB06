@@ -975,6 +975,7 @@ int db_load() {
 
 			   tour->matches[id] = Match(id);
 			   auto& match = tour->matches[id];
+			   match.sets.clear();
 
 			   match.team1SetPoints = team1SetPoints;
 			   match.team2SetPoints = team2SetPoints;
