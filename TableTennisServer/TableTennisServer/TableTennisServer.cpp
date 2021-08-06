@@ -18,6 +18,13 @@
 #include <unistd.h>
 #endif
 
+#define USE_DB
+
+#ifdef USE_DB
+#include"mysql.h"
+#endif
+
+
 #define DOCUMENT_ROOT "./website"
 #define PORT "80,443s"
 #define SSL_CERTIFICATE_PATH "./server.pem"
@@ -55,7 +62,6 @@ public:
 
 class WebsocketHandler : public CivetWebSocketHandler {
    
-   char gameData[1000] = "";
 
    void broadcast(string& message) {
 	  for (std::map<unsigned int, User*>::iterator iter = all_users.begin(); iter != all_users.end(); ++iter)
@@ -850,6 +856,359 @@ class WebsocketHandler : public CivetWebSocketHandler {
    }
 };
 
+#ifdef USE_DB
+MYSQL* conn;
+
+int db_connect() {
+   conn = mysql_init(0);
+   conn = mysql_real_connect(conn, "localhost", "root", "password", "", 3306, NULL, 0);
+   if (!conn) {
+	  puts("Connection to database has failed!");
+	  return 1;
+   }
+   
+   return 0;
+}
+
+int db_load() {
+   MYSQL_ROW row;
+   MYSQL_RES* res;
+
+   string query = "SELECT COUNT(*) FROM information_schema.schemata WHERE SCHEMA_NAME='table_tennis'";
+   int qstate = mysql_query(conn, query.c_str());
+   if (!qstate)
+   {
+	  res = mysql_store_result(conn);
+	  row = mysql_fetch_row(res);
+
+	  if (strcmp(row[0], "1") == 0) {
+		 printf("table_tennis exists\n");
+		 
+		 if (!mysql_query(conn, "SELECT `user_id`,`user_name` FROM table_tennis.users")) {
+			res = mysql_store_result(conn);
+			while (row = mysql_fetch_row(res)) {
+			   auto user = new User();
+			   unsigned int id = stoi(row[0]);
+			   user->id = id;
+			   user->name = row[1];
+			   all_users[id] = user;
+			   clientCounter++;
+			}
+		 }
+		 else {
+			cout << "users was not found: " << mysql_error(conn) << endl;
+			return 1;
+		 }
+
+		 if (!mysql_query(conn, "SELECT `team_id`,`team_name`,`team_owner_id` FROM table_tennis.teams")) {
+			res = mysql_store_result(conn);
+			while (row = mysql_fetch_row(res)) {
+			   auto team = new Team();
+			   unsigned int id = stoi(row[0]);
+			   team->id = id;
+			   team->name = row[1];
+			   team->owner = all_users[stoi(row[2])];
+			   all_teams[id] = team;
+			   teamCounter++;
+			}
+		 }
+		 else {
+			cout << "teams was not found: " << mysql_error(conn) << endl;
+			return 1;
+		 }
+
+		 if (!mysql_query(conn, "SELECT `user_id`,`user_team_id` FROM table_tennis.users")) {
+			res = mysql_store_result(conn);
+			while (row = mysql_fetch_row(res)) {
+			   if (row[1] != NULL) {
+				  auto user = all_users[stoi(row[0])];
+				  auto team = all_teams[stoi(row[1])];
+				  user->team = team;
+				  team->users.push_back(user);
+
+			   }
+			}
+		 }
+		 else {
+			cout << "users was not found: " << mysql_error(conn) << endl;
+			return 1;
+		 }
+
+		 if (!mysql_query(conn, "SELECT * FROM table_tennis.tournaments")) {
+			res = mysql_store_result(conn);
+			while (row = mysql_fetch_row(res)) {
+			   auto tour = new Tour();
+			   unsigned int id = stoi(row[0]);
+			   unsigned int homeTeamId = stoi(row[2]);
+			   unsigned int awayTeamId = stoi(row[3]);
+			   unsigned int ownerId = stoi(row[4]);
+
+			   tour->id = id;
+			   tour->name = row[1];
+			   tour->home = all_teams[homeTeamId];
+			   tour->away = all_teams[awayTeamId];
+			   tour->owner = all_users[ownerId];
+
+			   all_tours[id] = tour;
+			   tourCounter++;
+			}
+		 }
+		 else {
+			cout << "tournaments was not found: " << mysql_error(conn) << endl;
+			return 1;
+		 }
+
+
+		 if (!mysql_query(conn, "SELECT * FROM table_tennis.matches")) {
+			res = mysql_store_result(conn);
+			while (row = mysql_fetch_row(res)) {
+			   unsigned int id = stoi(row[0]);
+			   unsigned int tourId = stoi(row[1]);
+			   unsigned int team1SetPoints = stoi(row[2]);
+			   unsigned int team2SetPoints = stoi(row[3]);
+			   unsigned int playersPerTeam = stoi(row[4]);
+			   unsigned int numberOfSets = stoi(row[5]);
+			   bool originalSide = stoi(row[6]);
+			   bool originalServe = stoi(row[7]);
+
+			   auto tour = all_tours[tourId];
+
+			   tour->matches[id] = Match(id);
+			   auto& match = tour->matches[id];
+
+			   match.team1SetPoints = team1SetPoints;
+			   match.team2SetPoints = team2SetPoints;
+			   match.playersPerTeam = playersPerTeam;
+			   match.numberOfSets = numberOfSets;
+			   match.originalSide = originalSide;
+			   match.originalServe = originalServe;
+			}
+		 }
+		 else {
+			cout << "matches was not found: " << mysql_error(conn) << endl;
+			return 1;
+		 }
+
+
+		 if (!mysql_query(conn, "SELECT * FROM table_tennis.match_users")) {
+			res = mysql_store_result(conn);
+			while (row = mysql_fetch_row(res)) {
+			   unsigned int id = stoi(row[0]);
+			   unsigned int tourId = stoi(row[1]);
+			   unsigned int matchId = stoi(row[2]);
+			   unsigned int userId = stoi(row[3]);
+			   bool fromTeam1 = stoi(row[4]);
+
+			   auto& match = all_tours[tourId]->matches[matchId];
+			   if (fromTeam1) {
+				  match.playersTeam1.push_back(all_users[userId]);
+			   }
+			   else {
+				  match.playersTeam2.push_back(all_users[userId]);
+			   }
+			}
+		 }
+		 else {
+			cout << "match_users was not found: " << mysql_error(conn) << endl;
+			return 1;
+		 }
+
+		 if (!mysql_query(conn, "SELECT * FROM table_tennis.sets")) {
+			res = mysql_store_result(conn);
+			while (row = mysql_fetch_row(res)) {
+			   unsigned int id = stoi(row[0]);
+			   unsigned int tourId = stoi(row[1]);
+			   unsigned int matchId = stoi(row[2]);
+
+			   unsigned int team1Points = stoi(row[3]);
+			   unsigned int team2Points = stoi(row[4]);
+
+			   auto& match = all_tours[tourId]->matches[matchId];
+			   Set set = Set(id);
+			   set.team1Points = team1Points;
+			   set.team2Points = team2Points;
+			   match.sets.push_back(set);
+			}
+		 }
+		 else {
+			cout << "sets was not found: " << mysql_error(conn) << endl;
+			return 1;
+		 }
+
+	  }
+	  else {
+		 printf("table_tennis does not exist\n");
+
+		 if (mysql_query(conn, "CREATE SCHEMA `table_tennis` DEFAULT CHARACTER SET utf8;")) {
+			cout << "table_tennis creation failed: " << mysql_error(conn) << endl;
+			return 1;
+		 }
+		 
+		 if (mysql_query(conn, "CREATE TABLE `table_tennis`.`users` (`user_id` INT NOT NULL, `user_name` VARCHAR(45) NOT NULL, `user_team_id` INT NULL, PRIMARY KEY (`user_id`));")) {
+			cout << "users creation failed: " << mysql_error(conn) << endl;
+			return 1;
+		 }
+
+		 if (mysql_query(conn, "CREATE TABLE `table_tennis`.`teams` (`team_id` INT NOT NULL,`team_name` VARCHAR(45) NOT NULL,`team_owner_id` INT NOT NULL,PRIMARY KEY (`team_id`),INDEX `teams_users_idx` (`team_owner_id` ASC) VISIBLE,CONSTRAINT `teams_users` FOREIGN KEY (`team_owner_id`) REFERENCES `table_tennis`.`users`(`user_id`) ON DELETE NO ACTION ON UPDATE NO ACTION);")) {
+			cout << "teams creation failed: " << mysql_error(conn) << endl;
+			return 1;
+		 }
+
+		 if (mysql_query(conn, "ALTER TABLE `table_tennis`.`users` ADD INDEX `users_teams_idx` (`user_team_id` ASC) VISIBLE;")) {
+			cout << "users alteration failed: " << mysql_error(conn) << endl;
+			return 1;
+		 }
+
+		 if (mysql_query(conn, "ALTER TABLE `table_tennis`.`users` ADD CONSTRAINT `users_teams` FOREIGN KEY (`user_team_id`) REFERENCES `table_tennis`.`teams` (`team_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;")) {
+			cout << "users alteration 2 failed: " << mysql_error(conn) << endl;
+			return 1;
+		 }
+
+		 if (mysql_query(conn, "CREATE TABLE `table_tennis`.`tournaments` (`tournament_id` INT NOT NULL,`tournament_name` VARCHAR(45) NOT NULL,`tournament_home_team_id` INT NOT NULL,`tournament_away_team_id` INT NOT NULL,`tournament_owner_id` INT NOT NULL,PRIMARY KEY (`tournament_id`),INDEX `tournaments_users_idx` (`tournament_owner_id` ASC) VISIBLE,INDEX `tournaments_home_teams_idx` (`tournament_home_team_id` ASC) VISIBLE,INDEX `tournaments_away_teams_idx` (`tournament_away_team_id` ASC) VISIBLE,CONSTRAINT `tournaments_users` FOREIGN KEY (`tournament_owner_id`) REFERENCES `table_tennis`.`users` (`user_id`) ON DELETE NO ACTION ON UPDATE NO ACTION, CONSTRAINT `tournaments_home_teams` FOREIGN KEY (`tournament_home_team_id`) REFERENCES `table_tennis`.`teams` (`team_id`) ON DELETE NO ACTION ON UPDATE NO ACTION, CONSTRAINT `tournaments_away_teams` FOREIGN KEY (`tournament_away_team_id`) REFERENCES `table_tennis`.`teams` (`team_id`) ON DELETE NO ACTION ON UPDATE NO ACTION);")) {
+			cout << "tournaments creation failed: " << mysql_error(conn) << endl;
+			return 1;
+		 }
+
+		 if (mysql_query(conn, "CREATE TABLE `table_tennis`.`matches` ( `match_id` INT NOT NULL, `match_tournament_id` INT NOT NULL, `match_team_1_set_points` INT NOT NULL, `match_team_2_set_points` INT NOT NULL, `match_players_per_team` INT NOT NULL, `match_number_of_sets` INT NOT NULL, `match_original_side` TINYINT NOT NULL, `match_original_serve` TINYINT NOT NULL, PRIMARY KEY (`match_id`, `match_tournament_id`), INDEX `matches_tournaments_idx` (`match_tournament_id` ASC) VISIBLE, CONSTRAINT `matches_tournaments` FOREIGN KEY (`match_tournament_id`) REFERENCES `table_tennis`.`tournaments` (`tournament_id`) ON DELETE NO ACTION ON UPDATE NO ACTION);")) {
+			cout << "matches creation failed: " << mysql_error(conn) << endl;
+			return 1;
+		 }
+
+		 if (mysql_query(conn, "CREATE TABLE `table_tennis`.`sets` ( `set_id` INT NOT NULL, `set_tournament_id` INT NOT NULL, `set_match_id` INT NOT NULL, `set_team_1_points` INT NOT NULL, `set_team_2_points` INT NOT NULL, PRIMARY KEY (`set_id`, `set_tournament_id`, `set_match_id`), INDEX `sets_tournaments_idx` (`set_tournament_id` ASC) VISIBLE, INDEX `sets_matches_idx` (`set_match_id` ASC) VISIBLE, CONSTRAINT `sets_tournaments` FOREIGN KEY (`set_tournament_id`) REFERENCES `table_tennis`.`tournaments` (`tournament_id`) ON DELETE NO ACTION ON UPDATE NO ACTION, CONSTRAINT `sets_matches` FOREIGN KEY (`set_match_id`) REFERENCES `table_tennis`.`matches` (`match_id`) ON DELETE NO ACTION ON UPDATE NO ACTION);")) {
+			cout << "sets creation failed: " << mysql_error(conn) << endl;
+			return 1;
+		 }
+
+		 if (mysql_query(conn, "CREATE TABLE `table_tennis`.`match_users` ( `match_user_id` INT NOT NULL, `match_user_tour_id` INT NOT NULL, `match_user_match_id` INT NOT NULL, `match_user_user_id` INT NOT NULL, `match_user_from_team_1` TINYINT NOT NULL, PRIMARY KEY (`match_user_id`, `match_user_tour_id`, `match_user_match_id`), INDEX `match_users_tournaments_idx` (`match_user_tour_id` ASC) VISIBLE, INDEX `match_users_matches_idx` (`match_user_match_id` ASC) VISIBLE, INDEX `match_users_users_idx` (`match_user_user_id` ASC) VISIBLE, CONSTRAINT `match_users_tournaments` FOREIGN KEY (`match_user_tour_id`) REFERENCES `table_tennis`.`tournaments` (`tournament_id`) ON DELETE NO ACTION ON UPDATE NO ACTION, CONSTRAINT `match_users_matches` FOREIGN KEY (`match_user_match_id`) REFERENCES `table_tennis`.`matches` (`match_id`) ON DELETE NO ACTION ON UPDATE NO ACTION, CONSTRAINT `match_users_users` FOREIGN KEY (`match_user_user_id`) REFERENCES `table_tennis`.`users` (`user_id`) ON DELETE NO ACTION ON UPDATE NO ACTION);")) {
+			cout << "match_users creation failed: " << mysql_error(conn) << endl;
+			return 1;
+		 }
+
+		 cout << "table_tennis was created" << endl;
+	  }
+   }
+   else
+   {
+	  cout << "Query failed: " << mysql_error(conn) << endl;
+   }
+
+   return 0;
+}
+
+int db_store() {
+   MYSQL_ROW row;
+   MYSQL_RES* res;
+
+   if (mysql_query(conn, "UPDATE table_tennis.users SET `user_team_id`=null WHERE `user_id`>='0';")) {
+	  cout << "user update failed: " << mysql_error(conn) << endl;
+   }
+
+   if (mysql_query(conn, "DELETE FROM table_tennis.sets WHERE `set_id`>=0;")) {
+	  cout << "sets deletion failed: " << mysql_error(conn) << endl;
+	  return 1;
+   }
+
+   if (mysql_query(conn, "DELETE FROM table_tennis.match_users WHERE `match_user_id`>=0;")) {
+	  cout << "match_users deletion failed: " << mysql_error(conn) << endl;
+	  return 1;
+   }
+
+   if (mysql_query(conn, "DELETE FROM table_tennis.matches WHERE `match_id`>=0;")) {
+	  cout << "matches deletion failed: " << mysql_error(conn) << endl;
+	  return 1;
+   }
+
+   if (mysql_query(conn, "DELETE FROM table_tennis.tournaments WHERE `tournament_id`>=0;")) {
+	  cout << "tournaments deletion failed: " << mysql_error(conn) << endl;
+	  return 1;
+   }
+
+   if (mysql_query(conn, "DELETE FROM table_tennis.teams WHERE `team_id`>=0;")) {
+	  cout << "teams deletion failed: " << mysql_error(conn) << endl;
+	  return 1;
+   }
+
+   if (mysql_query(conn, "DELETE FROM table_tennis.users WHERE `user_id`>=0;")) {
+	  cout << "users deletion failed: " << mysql_error(conn) << endl;
+	  return 1;
+   }
+
+   for (std::map<unsigned int, User*>::iterator iter = all_users.begin(); iter != all_users.end(); ++iter)
+   {
+	  auto user = iter->second;
+
+	  string query = "INSERT INTO table_tennis.users VALUES ('" + to_string(user->id) + "','" + user->name + "',null);";
+	  if (mysql_query(conn, query.c_str())) {
+		 cout << "user addition failed: " << mysql_error(conn) << endl;
+	  }
+   }
+
+   for (std::map<unsigned int, Team*>::iterator iter = all_teams.begin(); iter != all_teams.end(); ++iter)
+   {
+	  auto team = iter->second;
+
+	  string query = "INSERT INTO table_tennis.teams VALUES ('" + to_string(team->id) + "','" + team->name + "','" + to_string(team->owner->id) + "');";
+	  if (mysql_query(conn, query.c_str())) {
+		 cout << "team addition failed: " << mysql_error(conn) << endl;
+	  }
+   }
+
+   for (std::map<unsigned int, User*>::iterator iter = all_users.begin(); iter != all_users.end(); ++iter)
+   {
+	  auto user = iter->second;
+	  if (user->team != nullptr) {
+		 string query = "UPDATE table_tennis.users SET `user_team_id`='" + to_string(user->team->id) + "' WHERE `user_id`='"+ to_string(user->id) +"'";
+		 if (mysql_query(conn, query.c_str())) {
+			cout << "user update failed: " << mysql_error(conn) << endl;
+		 }
+	  }
+   }
+   unsigned int match_user_counter = 0;
+   unsigned int sets_counter = 0;
+   for (std::map<unsigned int, Tour*>::iterator iter = all_tours.begin(); iter != all_tours.end(); ++iter)
+   {
+	  auto tour = iter->second;
+	  string query = "INSERT INTO table_tennis.tournaments VALUES ('" + to_string(tour->id) + "','" + tour->name + "','" + to_string(tour->home->id) + "','" + to_string(tour->away->id) + "','" + to_string(tour->owner->id) + "');";
+	  if (mysql_query(conn, query.c_str())) {
+		 cout << "tournament insertion failed: " << mysql_error(conn) << endl;
+	  }
+
+	  for (std::map<unsigned int, Match>::iterator iter = tour->matches.begin(); iter != tour->matches.end(); ++iter)
+	  {
+		 auto& match = iter->second;
+		 query = "INSERT INTO table_tennis.matches VALUES ('" + to_string(match.id) + "','" + to_string(tour->id) + "','" + to_string(match.team1SetPoints) + "','" + to_string(match.team2SetPoints) + "','" + to_string(match.playersPerTeam) + "','" + to_string(match.numberOfSets) + "','" + to_string(match.originalSide) + "','" + to_string(match.originalServe) + "');";
+		 if (mysql_query(conn, query.c_str())) {
+			cout << "match insertion failed: " << mysql_error(conn) << endl;
+		 }
+
+		 for (const auto player : match.playersTeam1) {
+			query = "INSERT INTO table_tennis.match_users VALUES ('" + to_string(match_user_counter++) + "','" + to_string(tour->id) + "','" + to_string(match.id) + "','" + to_string(player->id) + "','1');";
+			if (mysql_query(conn, query.c_str())) {
+			   cout << "match_user insertion failed: " << mysql_error(conn) << endl;
+			}
+		 }
+
+		 for (const auto player : match.playersTeam2) {
+			query = "INSERT INTO table_tennis.match_users VALUES ('" + to_string(match_user_counter++) + "','" + to_string(tour->id) + "','" + to_string(match.id) + "','" + to_string(player->id) + "','0');";
+			if (mysql_query(conn, query.c_str())) {
+			   cout << "match_user 2 insertion failed: " << mysql_error(conn) << endl;
+			}
+		 }
+
+		 for (const auto set : match.sets) {
+			query = "INSERT INTO table_tennis.sets VALUES ('" + to_string(sets_counter++) + "','" + to_string(tour->id) + "','" + to_string(match.id) + "','" + to_string(set.team1Points) + "','" + to_string(set.team2Points) + "');";
+			if (mysql_query(conn, query.c_str())) {
+			   cout << "sets insertion failed: " << mysql_error(conn) << endl;
+			}
+		 }
+	  }
+   }
+
+
+   return 0;
+}
+#endif
+
 int
 main(int argc, char* argv[])
 {
@@ -863,15 +1222,26 @@ main(int argc, char* argv[])
 	  cpp_options.push_back(options[i]);
    }
 
-   // CivetServer server(options); // <-- C style start
-   CivetServer server(cpp_options); // <-- C++ style start
+   CivetServer server(cpp_options);
+
+#ifdef USE_DB
+   bool db_connected = db_connect() == 0;
+   if (db_connected) {
+	  db_load();
+   }
+#endif
 
    WebsocketHandler h_websocket;
    server.addWebSocketHandler("/websocket", h_websocket);
    printf("Run websocket example at http://localhost:%s/ws\n", PORT);
 
-   printf("Run example at http://localhost:%s%s\n", PORT, EXAMPLE_URI);
+   ExitHandler h_exit;
+   server.addHandler(EXIT_URI, h_exit);
+
+   //printf("Run example at http://localhost:%s%s\n", PORT, EXAMPLE_URI);
    printf("Exit at http://localhost:%s%s\n", PORT, EXIT_URI);
+
+
 
    while (!exitNow) {
 #ifdef _WIN32
@@ -880,6 +1250,12 @@ main(int argc, char* argv[])
 	  sleep(1);
 #endif
    }
+
+#ifdef USE_DB
+   if (db_connected) {
+	  db_store();
+   }
+#endif
 
    printf("Bye!\n");
    mg_exit_library();
